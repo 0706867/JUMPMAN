@@ -1,4 +1,5 @@
 import pygame
+import os
 from pygame import mixer
 from pygame.locals import *
 import pickle
@@ -8,6 +9,26 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 
 mixer.init()
 pygame.init()
+
+
+if os.uname().sysname == 'Raspi-Dekstop':
+    print('yes')
+print (os.uname())
+if 0 == 1:
+    from gpiozero import Button
+    #joystick buttons
+    joystick_up = Button(4)
+    joystick_down = Button(17)
+    joystick_left = Button(27)
+    joystick_right = Button(22)
+    button_top_left = Button(18)
+    button_top_middle = Button(15)
+    button_top_right = Button(14)
+    button_bottom_left = Button(25)
+    button_bottom_middle = Button(24)
+    button_bottom_right = Button(23)
+    button_blue_left = Button(10)
+    button_blue_right = Button(9)
 
 clock = pygame.time.Clock()
 fps = 60
@@ -76,7 +97,7 @@ def reset_level(level):
 
     return world
 
-class Button():
+class Buttons():
     def __init__(self, x, y, image):
         self.image = image
         self.rect = self.image.get_rect()
@@ -110,6 +131,7 @@ class Player():
         col_thresh = 20
 
         if gameover == 0:
+            #play when keyboard is connected
             #get key presses
             key = pygame.key.get_pressed()
             if (key[pygame.K_SPACE] or key[pygame.K_UP]) and self.jumped == False and self.in_air == False:
@@ -122,17 +144,41 @@ class Player():
                 dx -= 2
                 self.counter += 1
                 self.direction = -1
-            if key[pygame.K_RIGHT]:
+            if key[pygame.K_RIGHT] :
                 dx += 2
                 self.counter += 1
                 self.direction = 1
-            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False :
+            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
                 self.counter = 0
                 self.index = 0
                 if self.direction == 1:
                     self.image = self.images_right[self.index]
                 if self.direction == -1:
                     self.image = self.images_left[self.index]
+            
+            #only run when playing on the retro pi
+            if 0 == 1:
+                if joystick_up.is_pressed and self.jumped == False and self.in_air == False:
+                    #jump_fx.play()
+                    self.jumped = True
+                    self.vel_y = -10
+                if joystick_up.is_pressed == False:
+                    self.jumped = False
+                if joystick_left.is_pressed:
+                    dx -= 2
+                    self.counter += 1
+                    self.direction = -1
+                if joystick_right.is_pressed:
+                    dx += 2
+                    self.counter += 1
+                    self.direction = 1
+                if joystick_left.is_pressed == False and joystick_right.is_pressed == False:
+                    self.counter = 0
+                    self.index = 0
+                    if self.direction == 1:
+                        self.image = self.images_right[self.index]
+                    if self.direction == -1:
+                        self.image = self.images_left[self.index]
 
             #grav
             self.vel_y += 1
@@ -361,9 +407,9 @@ if path.exists(f'level{level}_data'):
     world_data = pickle.load(pickle_in)
 world = World(world_data)
 
-restart_button = Button(screen_w //2 - 50, screen_h //2 + 100, restart_img)
-exit_button = Button(screen_w //2 - 350, screen_h //2 , exit_img)
-start_button = Button(screen_w //2 + 150, screen_h //2, start_img)
+restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
+exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
+start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True
 
@@ -425,6 +471,8 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == JOYDEVICEADDED:
+            print("NEW DEVICE")
 
     pygame.display.update()
 
