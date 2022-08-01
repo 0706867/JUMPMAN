@@ -10,11 +10,7 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 mixer.init()
 pygame.init()
 
-
-if os.uname().sysname == 'Raspi-Dekstop':
-    print('yes')
-print (os.uname())
-if 0 == 1:
+if os.uname().nodename == 'raspberrypi':
     from gpiozero import Button
     #joystick buttons
     joystick_up = Button(4)
@@ -134,11 +130,11 @@ class Player():
             #play when keyboard is connected
             #get key presses
             key = pygame.key.get_pressed()
-            if (key[pygame.K_SPACE] or key[pygame.K_UP]) and self.jumped == False and self.in_air == False:
+            if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False:
                 #jump_fx.play()
                 self.jumped = True
                 self.vel_y = -10
-            if (key[pygame.K_SPACE] or key[pygame.K_UP]) == False:
+            if (key[pygame.K_SPACE]) == False:
                 self.jumped = False
             if key[pygame.K_LEFT]:
                 dx -= 2
@@ -157,7 +153,7 @@ class Player():
                     self.image = self.images_left[self.index]
             
             #only run when playing on the retro pi
-            if 0 == 1:
+            if os.uname().nodename == 'raspberrypi':
                 if joystick_up.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
                     self.jumped = True
@@ -231,9 +227,11 @@ class Player():
                     self.image = climb_img
                     #climb
                     dy = 0
-                    if key[pygame.K_UP] == True: 
+                    #moving up when on a ladder
+                    if key[pygame.K_UP] or joystick_up.is_pressed == True: 
                             dy -= 2
-                    if key[pygame.K_DOWN] == True: 
+                    #moving down when on a ladder
+                    if key[pygame.K_DOWN] or joystick_down.is_pressed == True: 
                             dy += 2
 
             #update rect
@@ -471,8 +469,8 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if event.type == JOYDEVICEADDED:
-            print("NEW DEVICE")
+        #if event.type == JOYDEVICEADDED:
+        #    print("NEW DEVICE")
 
     pygame.display.update()
 
