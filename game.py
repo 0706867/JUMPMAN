@@ -154,7 +154,7 @@ class Player():
             
             #only run when playing on the retro pi
             if os.uname().nodename == 'raspberrypi':
-                if joystick_up.is_pressed and self.jumped == False and self.in_air == False:
+                if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
                     self.jumped = True
                     self.vel_y = -10
