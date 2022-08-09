@@ -39,7 +39,7 @@ font = pygame.font.SysFont('Arial', 70)
 tile_size = 24
 gameover = 0
 main = True
-level = 1
+level = 2
 max_levels = 3
 score = 0
 
@@ -51,9 +51,9 @@ screen = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption('Platformer')
 
 #images
-bg_img = pygame.image.load('bg.png')
+bg_img = pygame.image.load('star_wars_bg.png')
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
-block_img = pygame.image.load('block.png')
+block_img = pygame.image.load('block2.png')
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
 chain_img = pygame.image.load('chain.png')
 chain_img = pygame.transform.scale(chain_img, (tile_size,tile_size))
@@ -228,10 +228,10 @@ class Player():
                     #climb
                     dy = 0
                     #moving up when on a ladder
-                    if key[pygame.K_UP] or joystick_up.is_pressed == True: 
+                    if key[pygame.K_UP]: 
                             dy -= 2
                     #moving down when on a ladder
-                    if key[pygame.K_DOWN] or joystick_down.is_pressed == True: 
+                    if key[pygame.K_DOWN] : 
                             dy += 2
 
             #update rect
