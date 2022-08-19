@@ -1,5 +1,6 @@
 import pygame
 import os
+import platform
 from pygame import mixer
 from pygame.locals import *
 import pickle
@@ -10,7 +11,8 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 mixer.init()
 pygame.init()
 
-if os.uname().nodename == 'raspberrypi':
+#if os.uname().nodename == 'raspberrypi':
+if platform.system() == 'raspberrypi':
     from gpiozero import Button
     #joystick buttons
     joystick_up = Button(4)
@@ -33,13 +35,13 @@ screen_w = 960
 screen_h = 600
 
 #font
-font_score = pygame.font.SysFont('Arial', 30)
+font_score = pygame.font.SysFont('Arial', 50)
 font = pygame.font.SysFont('Arial', 70)
 
 tile_size = 24
 gameover = 0
 main = True
-level = 2
+level = 1
 max_levels = 3
 score = 0
 
@@ -51,7 +53,7 @@ screen = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption('Platformer')
 
 #images
-bg_img = pygame.image.load('star_wars_bg.png')
+bg_img = pygame.image.load('bg.png')
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
 block_img = pygame.image.load('block2.png')
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
@@ -65,7 +67,34 @@ climb_img = pygame.transform.scale(climb_img, (tile_size,tile_size))
 restart_img = pygame.image.load('restart_btn.png')
 start_img = pygame.image.load('start_btn.png')
 exit_img = pygame.image.load('exit_btn.png')
+#level 0
+level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
 
+#level 1    background image            block image             ladder image
+level_1 = ['level 1/ice_bg.png', 'level 1/ice_block.png','level 1/ice_ladder_clear.png']
+
+#level 2    background image            block image             ladder image
+level_2 = ['level 2/hall_bg.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
+
+#level 3    background image            block image             ladder image
+level_3 = ['level 3/desert_bg.png', 'level 3/desert_block.png', 'level 3/desert_ladder.png']
+
+#level 4    bakcground image            character face             character death face     character idle image
+level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.png', 'level 4/luke_idle.png',
+#enemy idle     enemy idle animation 2  enemy bullet        enemy death face            enemy face              enemy shoot anim
+'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
+
+levels = [level_1, level_2, level_3, level_4]
+bg = pygame.image.load(levels[level-1 ] [0])
+bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
+block = pygame.image.load(levels[level-1] [1])
+block = pygame.transform.scale(block, (tile_size,tile_size))
+ladder = pygame.image.load(levels[level-1] [2]) 
+bg_bottom = pygame.image.load('bg.png')
+bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
+bg_img = bg
+block_img = block
+ladder_img = ladder
 #sounds
 #pygame.mixer.music.load('')
 #pygame.mixer.music.play(-1, 0.0, 1000)
@@ -153,7 +182,8 @@ class Player():
                     self.image = self.images_left[self.index]
             
             #only run when playing on the retro pi
-            if os.uname().nodename == 'raspberrypi':
+            #if os.uname().nodename == 'raspberrypi':
+            if os.name == 'raspberrypi':
                 if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
                     self.jumped = True
@@ -383,11 +413,7 @@ class Exit(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-world_data = [
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-
-]
+world_data = []
 
 player = Player(screen_w //2 , 430)
 lava_group = pygame.sprite.Group()
@@ -415,6 +441,8 @@ while run:
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
 
+
+
     if main:
         if  exit_button.draw():
             run = False
@@ -428,11 +456,13 @@ while run:
             #update score
             if pygame.sprite.spritecollide(player, coin_group, True):
                 score += 1
-                if score % 12 == 0:
+                if score % 2 == 0:
                     gameover = 1
 
                 #coin_fx.play()
-            draw_text('Score: ' + str(score), font_score, white, tile_size - 10, 10)
+            #display score
+            screen.blit(bg_bottom, (0, screen_h-50))
+            draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
 
 
         blob_group.draw(screen)
@@ -451,6 +481,14 @@ while run:
         if gameover == 1:
             level += 1 
             if level <= max_levels:
+                bg = pygame.image.load(levels[level-1 ] [0])
+                bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
+                block = pygame.image.load(levels[level-1] [1])
+                block = pygame.transform.scale(block, (tile_size,tile_size))
+                ladder = pygame.image.load(levels[level-1] [2]) 
+                bg_img = bg
+                block_img = block
+                ladder_img = ladder
                 #reset level
                 world_data = []
                 world = reset_level(level)
@@ -460,6 +498,14 @@ while run:
                 #restart game
                 if restart_button.draw():
                     level = 1
+                    bg = pygame.image.load(levels[level-1 ] [0])
+                    bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
+                    block = pygame.image.load(levels[level-1] [1])
+                    block = pygame.transform.scale(block, (tile_size,tile_size))
+                    ladder = pygame.image.load(levels[level-1] [2]) 
+                    bg_img = bg
+                    block_img = block
+                    ladder_img = ladder
                     world_data = []
                     world = reset_level(level)
                     gameover = 0
