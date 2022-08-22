@@ -44,6 +44,7 @@ main = True
 level = 1
 max_levels = 3
 score = 0
+theme = 0
 
 #colours
 white = (255,255,255)
@@ -85,16 +86,14 @@ level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.
 'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
 
 levels = [level_1, level_2, level_3, level_4]
-bg = pygame.image.load(levels[level-1 ] [0])
-bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
-block = pygame.image.load(levels[level-1] [1])
-block = pygame.transform.scale(block, (tile_size,tile_size))
-ladder = pygame.image.load(levels[level-1] [2]) 
+bg_img = pygame.image.load(levels[level-1 ] [0])
+bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+block_img = pygame.image.load(levels[level-1] [1])
+block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+ladder_img = pygame.image.load(levels[level-1] [2]) 
 bg_bottom = pygame.image.load('bg.png')
 bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
-bg_img = bg
-block_img = block
-ladder_img = ladder
+
 #sounds
 #pygame.mixer.music.load('')
 #pygame.mixer.music.play(-1, 0.0, 1000)
@@ -154,11 +153,11 @@ class Player():
         dy = 0
         walk_cooldown = 5
         col_thresh = 20
+        key = pygame.key.get_pressed()
 
         if gameover == 0:
             #play when keyboard is connected
             #get key presses
-            key = pygame.key.get_pressed()
             if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False:
                 #jump_fx.play()
                 self.jumped = True
@@ -437,18 +436,37 @@ start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True
 
+
 while run:
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
 
-
-
+    if pygame.key.get_pressed()[pygame.K_4]:
+        theme = 0
+    if pygame.key.get_pressed()[pygame.K_5]:
+        theme = 1
+    print(theme)
+    print(levels[level-1][0])
+    if theme == 1:
+        bg_img = pygame.image.load(levels[level-1][0])
+        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+        block_img = pygame.image.load(levels[level-1][1])
+        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+        ladder_img = pygame.image.load(levels[level-1][2])
+    if theme == 0:
+        bg_img = pygame.image.load('bg.png')
+        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+        block_img = pygame.image.load('block2.png')
+        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+        ladder_img = pygame.image.load('ladder.png') 
     if main:
         if  exit_button.draw():
             run = False
         if start_button.draw():
-            main = False 
-    else:
+            main = False
+            game= True 
+
+    elif game:
         world.draw()
 
         if gameover == 0:
@@ -481,14 +499,11 @@ while run:
         if gameover == 1:
             level += 1 
             if level <= max_levels:
-                bg = pygame.image.load(levels[level-1 ] [0])
-                bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
-                block = pygame.image.load(levels[level-1] [1])
-                block = pygame.transform.scale(block, (tile_size,tile_size))
-                ladder = pygame.image.load(levels[level-1] [2]) 
-                bg_img = bg
-                block_img = block
-                ladder_img = ladder
+                bg_img = pygame.image.load(levels[level-1 ] [0])
+                bg_img= pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+                block_img = pygame.image.load(levels[level-1] [1])
+                block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+                ladder_img = pygame.image.load(levels[level-1] [2]) 
                 #reset level
                 world_data = []
                 world = reset_level(level)
@@ -498,14 +513,9 @@ while run:
                 #restart game
                 if restart_button.draw():
                     level = 1
-                    bg = pygame.image.load(levels[level-1 ] [0])
-                    bg = pygame.transform.scale(bg, (screen_w,screen_h-120))
-                    block = pygame.image.load(levels[level-1] [1])
-                    block = pygame.transform.scale(block, (tile_size,tile_size))
-                    ladder = pygame.image.load(levels[level-1] [2]) 
-                    bg_img = bg
-                    block_img = block
-                    ladder_img = ladder
+                    game=False
+                    main = True
+                    theme = 1
                     world_data = []
                     world = reset_level(level)
                     gameover = 0
