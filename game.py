@@ -88,7 +88,7 @@ level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.
 levels = [level_1, level_2, level_3, level_4]
 bg_img = pygame.image.load(levels[level-1 ] [0])
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-block_img = pygame.image.load(levels[level-1] [1])
+block_img = pygame.image.load(levels[level-1 ] [0])
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
 ladder_img = pygame.image.load(levels[level-1] [2]) 
 bg_bottom = pygame.image.load('bg.png')
@@ -425,40 +425,39 @@ exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
 #coin_group.add(score_coin)
 
-if path.exists(f'level{level}_data'):
-    pickle_in = open(f'level{level}_data', 'rb')
-    world_data = pickle.load(pickle_in)
-world = World(world_data)
 
 restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
 exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
 start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True
-
+if path.exists(f'level{level}_data'):
+    pickle_in = open(f'level{level}_data', 'rb')
+    world_data = pickle.load(pickle_in)
+world = World(world_data)
 
 while run:
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
 
+    if theme == 1:
+        if level <= max_levels:
+            bg_img = pygame.image.load(levels[level-1][0])
+            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+            block_img = pygame.image.load(levels[level-1][1])
+            block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+            ladder_img = pygame.image.load(levels[level-1][2])
+    if theme == 0:
+        if level <= max_levels:
+            bg_img = pygame.image.load('bg.png')
+            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+            block_img = pygame.image.load('block2.png')
+            block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+            ladder_img = pygame.image.load('ladder.png') 
     if pygame.key.get_pressed()[pygame.K_4]:
         theme = 0
     if pygame.key.get_pressed()[pygame.K_5]:
         theme = 1
-    print(theme)
-    print(levels[level-1][0])
-    if theme == 1:
-        bg_img = pygame.image.load(levels[level-1][0])
-        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-        block_img = pygame.image.load(levels[level-1][1])
-        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-        ladder_img = pygame.image.load(levels[level-1][2])
-    if theme == 0:
-        bg_img = pygame.image.load('bg.png')
-        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-        block_img = pygame.image.load('block2.png')
-        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-        ladder_img = pygame.image.load('ladder.png') 
     if main:
         if  exit_button.draw():
             run = False
@@ -499,11 +498,7 @@ while run:
         if gameover == 1:
             level += 1 
             if level <= max_levels:
-                bg_img = pygame.image.load(levels[level-1 ] [0])
-                bg_img= pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-                block_img = pygame.image.load(levels[level-1] [1])
-                block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-                ladder_img = pygame.image.load(levels[level-1] [2]) 
+                theme = 1
                 #reset level
                 world_data = []
                 world = reset_level(level)
