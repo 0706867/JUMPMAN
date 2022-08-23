@@ -86,9 +86,9 @@ level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.
 'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
 
 levels = [level_1, level_2, level_3, level_4]
-bg_img = pygame.image.load(levels[level-1 ] [0])
+bg_img = pygame.image.load(levels[level-1] [0])
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-block_img = pygame.image.load(levels[level-1 ] [0])
+block_img = pygame.image.load(levels[level-1] [1])
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
 ladder_img = pygame.image.load(levels[level-1] [2]) 
 bg_bottom = pygame.image.load('bg.png')
@@ -431,14 +431,19 @@ exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
 start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True
-if path.exists(f'level{level}_data'):
-    pickle_in = open(f'level{level}_data', 'rb')
-    world_data = pickle.load(pickle_in)
-world = World(world_data)
+loaded = False
 
 while run:
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
+
+    if loaded == False:
+        if path.exists(f'level{level}_data'):
+            pickle_in = open(f'level{level}_data', 'rb')
+            world_data = pickle.load(pickle_in)
+        world = World(world_data)
+        loaded = True
+
 
     if theme == 1:
         if level <= max_levels:
@@ -456,16 +461,26 @@ while run:
             ladder_img = pygame.image.load('ladder.png') 
     if pygame.key.get_pressed()[pygame.K_4]:
         theme = 0
+        loaded = False
     if pygame.key.get_pressed()[pygame.K_5]:
         theme = 1
+        loaded = False
+    print(theme)
     if main:
         if  exit_button.draw():
             run = False
         if start_button.draw():
             main = False
             game= True 
+        level = 1
+        score = 0
+        world_data = []
+        world = reset_level(level)
+        gameover = 0
+        score = 0
 
-    elif game:
+    elif game and loaded:
+        loaded = True
         world.draw()
 
         if gameover == 0:
@@ -497,8 +512,8 @@ while run:
         
         if gameover == 1:
             level += 1 
+            loaded = False
             if level <= max_levels:
-                theme = 1
                 #reset level
                 world_data = []
                 world = reset_level(level)
@@ -507,14 +522,9 @@ while run:
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
                 #restart game
                 if restart_button.draw():
-                    level = 1
                     game=False
                     main = True
-                    theme = 1
-                    world_data = []
-                    world = reset_level(level)
-                    gameover = 0
-                    score = 0
+                    loaded = False
 
 
     for event in pygame.event.get():
