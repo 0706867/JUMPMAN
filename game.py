@@ -6,10 +6,13 @@ from pygame.locals import *
 import pickle
 from os import path
 
+#audio set up
 pygame.mixer.pre_init(44100, -16, 2, 512)
 
 mixer.init()
 pygame.init()
+
+#if ran on the retro pi initailise the buttons
 
 #if os.uname().nodename == 'raspberrypi':
 if platform.system() == 'raspberrypi':
@@ -38,6 +41,7 @@ screen_h = 600
 font_score = pygame.font.SysFont('Arial', 50)
 font = pygame.font.SysFont('Arial', 70)
 
+#variables
 tile_size = 24
 gameover = 0
 main = True
@@ -50,6 +54,7 @@ theme = 0
 white = (255,255,255)
 blue = (0,0,200)
 
+#screen setup
 screen = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption('Platformer')
 
@@ -68,7 +73,9 @@ climb_img = pygame.transform.scale(climb_img, (tile_size,tile_size))
 restart_img = pygame.image.load('restart_btn.png')
 start_img = pygame.image.load('start_btn.png')
 exit_img = pygame.image.load('exit_btn.png')
-#level 0
+
+
+#default theme
 level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
 
 #level 1    background image            block image             ladder image
@@ -85,7 +92,9 @@ level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.
 #enemy idle     enemy idle animation 2  enemy bullet        enemy death face            enemy face              enemy shoot anim
 'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
 
+#audomatic images change
 levels = [level_1, level_2, level_3, level_4]
+#gets the index (current level-1 as array start at 0) from array above and select the required image
 bg_img = pygame.image.load(levels[level-1] [0])
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
 block_img = pygame.image.load(levels[level-1] [1])
@@ -104,16 +113,19 @@ bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 #gameover_fx = pygame.mixer.Sound('')
 #gameover_fx.set_volume(0.5)
 
+#converts text to image as required by pygame
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
+#reset current level
 def reset_level(level):
     player.reset(screen_w //2 , 430)
-    blob_group.empty()
-    lava_group.empty()
-    exit_group.empty()
+    #blob_group.empty()
+    #lava_group.empty()
+    #exit_group.empty()
     platform_group.empty()
+    coin_group.empty()
     if path.exists(f'level{level}_data'):
         pickle_in = open(f'level{level}_data', 'rb')
         world_data = pickle.load(pickle_in)
@@ -131,9 +143,7 @@ class Buttons():
 
     def draw(self):
         action = False
-
         pos = pygame.mouse.get_pos()
-
         if self.rect.collidepoint(pos):
             if pygame.mouse.get_pressed()[0] == 1:
                 action = True
@@ -157,30 +167,29 @@ class Player():
 
         if gameover == 0:
             #play when keyboard is connected
-            #get key presses
-            if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False:
+            if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 self.jumped = True
                 self.vel_y = -10
-            if (key[pygame.K_SPACE]) == False:
+            if (key[pygame.K_SPACE]) == False: #if player is not pressing space, dont jump
                 self.jumped = False
-            if key[pygame.K_LEFT]:
-                dx -= 2
-                self.counter += 1
-                self.direction = -1
+            if key[pygame.K_LEFT]: #when left key is pressed
+                dx -= 2 #moves the player left and is used for collision - checks 2 pixels ahead
+                self.counter += 1 #used for animation
+                self.direction = -1 #used for animation
             if key[pygame.K_RIGHT] :
-                dx += 2
-                self.counter += 1
-                self.direction = 1
-            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
-                self.counter = 0
-                self.index = 0
-                if self.direction == 1:
+                dx += 2#moves the player left and is used for collision - checks 2 pixels ahead
+                self.counter += 1#used for animation
+                self.direction = 1#used for animation
+            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:#when left and right are not pressed
+                self.counter = 0 #stops on current image
+                self.index = 0 #used for animation
+                if self.direction == 1: #if direction is 1, use right facing images
                     self.image = self.images_right[self.index]
-                if self.direction == -1:
+                if self.direction == -1:  #if direction is -1, use left facing images
                     self.image = self.images_left[self.index]
             
-            #only run when playing on the retro pi
+            #only run when playing on the retro pi, same as above
             #if os.uname().nodename == 'raspberrypi':
             if os.name == 'raspberrypi':
                 if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
@@ -206,26 +215,27 @@ class Player():
                         self.image = self.images_left[self.index]
 
             #grav
-            self.vel_y += 1
-            if self.vel_y > 10:
+            self.vel_y += 1 #always falling down - how fast you fall down
+            if self.vel_y > 10: #max fall speed
                 self.vel_y = 10
-            dy += self.vel_y
+            dy += self.vel_y #fall down
 
             #check collision
-            self.in_air = True
+            self.in_air = True #if player is in air - falling or jumping
             for tile in world.tile_list:
-                #check x
-                if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ):
+            #check x
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                     dx = 0
-                if self.rect.x <= 0:
+            #stop player from moving off screen
+                if self.rect.x <= 0: 
                     dx = 1
                 if self.rect.x >= screen_w - tile_size:
                     self.rect.x = screen_w - tile_size
 
-                #check y
-                if self.rect.y <= 0 or self.rect.y >= screen_h:
+            #check y
+                if self.rect.y <= 0 or self.rect.y >= screen_h: #stop player from moving off screen
                     dy = 1
-                if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):
+                if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
                     #check if below ground
                     if self.vel_y < 0:
                         dy = tile[1].bottom - self.rect.top
@@ -237,21 +247,22 @@ class Player():
                         self.in_air = False
 
             #enemy
-            if pygame.sprite.spritecollide(self, blob_group, False):
-                gameover = -1
+            #if pygame.sprite.spritecollide(self, blob_group, False):
+            #    gameover = -1
                 #gameover_fx.play()
 
             #lava
-            if pygame.sprite.spritecollide(self, lava_group, False):
-                gameover = -1
+            #if pygame.sprite.spritecollide(self, lava_group, False):
+            #    gameover = -1
                 #gameover_fx.play()
             #fall to death
-            if self.rect.y >= 480:
-                gameover = -1
+            if self.rect.y >= 480: #minimum y value - when the player falls off map
+                gameover = -1  #player dies
             
-            #platforms
+            #ladders
             for platform in platform_group:
                 #y
+        #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
                 if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                     self.image = climb_img
                     #climb
@@ -263,12 +274,9 @@ class Player():
                     if key[pygame.K_DOWN] : 
                             dy += 2
 
-            #update rect
+            #move the player
             self.rect.x += dx
             self.rect.y += dy
-            if self.rect.bottom > screen_h:
-                self.rect.bottom = screen_h
-                dy = 0
 
             #animation
             if self.counter >= walk_cooldown:
@@ -281,15 +289,15 @@ class Player():
                 if self.direction == -1:
                     self.image = self.images_left[self.index]
         
-        elif gameover == -1:
+        elif gameover == -1: #when player is dead, update image to dead, draw 'Game Over' text
             self.image = self.dead_image
             draw_text('GAME OVER!',font, blue, (screen_w //2) -200, screen_h //2 )
-            if self.rect.y > 200:
+            if self.rect.y > 200: #mini animation - player becomes smaller and floats up - like a ghost
                 self.rect.y -= 1
         screen.blit(self.image, self.rect)
         return gameover
 
-    def reset(self, x, y):
+    def reset(self, x, y): #reset variables
         self.images_right = []
         self.images_left = []
         self.index = 0
@@ -341,13 +349,13 @@ class World():
                     platform_group.add(platform)
                 if tile == 6:
                     lava = Lava(col_count * tile_size, row_count * tile_size)
-                    lava_group.add(lava)
+                    #lava_group.add(lava)
                 if tile == 7:
                     coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2))
                     coin_group.add(coin)
                 if tile == 8:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
-                    exit_group.add(exit)
+                    #exit_group.add(exit)
                 col_count +=1
             row_count +=1
 
@@ -413,38 +421,33 @@ class Exit(pygame.sprite.Sprite):
         self.rect.y = y
 
 world_data = []
-
 player = Player(screen_w //2 , 430)
-lava_group = pygame.sprite.Group()
-blob_group = pygame.sprite.Group()
+#lava_group = pygame.sprite.Group()
+#blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
-exit_group = pygame.sprite.Group()
-
-
+#exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
 #coin_group.add(score_coin)
-
-
 restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
 exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
 start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
-run = True
-loaded = False
+run = True #is game running - used for closing game
+loaded = False #is map loaded - used for reskinning code
 
-while run:
+while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
-
-    if loaded == False:
+# if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
+    if not loaded:
         if path.exists(f'level{level}_data'):
             pickle_in = open(f'level{level}_data', 'rb')
             world_data = pickle.load(pickle_in)
         world = World(world_data)
         loaded = True
 
-
+#if theme is 1 load the sprites based on the level - star wars theme
     if theme == 1:
         if level <= max_levels:
             bg_img = pygame.image.load(levels[level-1][0])
@@ -452,6 +455,7 @@ while run:
             block_img = pygame.image.load(levels[level-1][1])
             block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
             ladder_img = pygame.image.load(levels[level-1][2])
+#if theme is 0 load the default sprites - original theme
     if theme == 0:
         if level <= max_levels:
             bg_img = pygame.image.load('bg.png')
@@ -459,66 +463,69 @@ while run:
             block_img = pygame.image.load('block2.png')
             block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
             ladder_img = pygame.image.load('ladder.png') 
+#(if 4 is pressed set theme to 0, if 5 is pressed set theme to 1) and reload the world.
     if pygame.key.get_pressed()[pygame.K_4]:
         theme = 0
         loaded = False
     if pygame.key.get_pressed()[pygame.K_5]:
         theme = 1
         loaded = False
-    print(theme)
+    print(clock)
+#if the current scene is the main menu
     if main:
+#draw and exit and start button, when pressed exit, exits the game and start, stop the menu scene and start games scene
         if  exit_button.draw():
             run = False
         if start_button.draw():
             main = False
             game= True 
+#reset game variables
         level = 1
         score = 0
         world_data = []
         world = reset_level(level)
         gameover = 0
         score = 0
-
+#if game is running and the map is loaded run the game
     elif game and loaded:
         loaded = True
         world.draw()
-
+#if game is running
         if gameover == 0:
-            blob_group.update()
-            #update score
-            if pygame.sprite.spritecollide(player, coin_group, True):
+            #blob_group.update()
+#update score
+            if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
-                if score % 2 == 0:
+                if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                     gameover = 1
 
                 #coin_fx.play()
-            #display score
+#display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
 
 
-        blob_group.draw(screen)
+        #blob_group.draw(screen)
         platform_group.draw(screen)
-        lava_group.draw(screen)
+        #lava_group.draw(screen)
         coin_group.draw(screen)
         gameover = player.update(gameover)
-
+#if player dies
         if gameover == -1:
-            if restart_button.draw():
+            if restart_button.draw(): #draw the restart button, when pressed reset the game variables
                 world_data = []
                 world = reset_level(level)
                 gameover = 0
                 score = 0
-        
-        if gameover == 1:
+#if player passes level
+        if gameover == 1: #next level starts and the world is not loaded
             level += 1 
             loaded = False
-            if level <= max_levels:
-                #reset level
+            if level <= max_levels: #when level number is lower than total levels, resets levels
                 world_data = []
                 world = reset_level(level)
                 gameover = 0
-            else:
+            else: #if player finishes last level, display text and reset game
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
                 #restart game
                 if restart_button.draw():
@@ -534,5 +541,5 @@ while run:
         #    print("NEW DEVICE")
 
     pygame.display.update()
-
+#when game is not running
 pygame.quit()
