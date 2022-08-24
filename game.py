@@ -171,15 +171,16 @@ class multi():
         threading.Thread(target=self.handle_connection, args=(client,)).start()
 
     def handle_connection(self, client):
-        while gameover != -1:
-            text = pygame.image.load('ladder.png')
+        while run:
+            text = str(player_pos)
             client.send(text.encode('utf-8'))
             data = client.recv(1024)
             if not data:
                 break
             else:
-                text.decode('utf-8')
-                bg_img = text
+                data.decode('utf-8')
+                print(text + "host")
+                print(str(data) + "client")
         client.close()
 
 multi()
@@ -486,7 +487,7 @@ start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
-
+multi().host_game('localhost', 9999)
 while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
@@ -598,8 +599,9 @@ while run: #while game is running
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
 
+    
     pygame.display.update()
-multi().host_game('localhost', 9999)
+
 
 #when game is not running
 pygame.quit()
