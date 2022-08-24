@@ -49,6 +49,7 @@ level = 1
 max_levels = 3
 score = 0
 theme = 0
+world_loaded = []
 
 #colours
 white = (255,255,255)
@@ -103,6 +104,23 @@ ladder_img = pygame.image.load(levels[level-1] [2])
 bg_bottom = pygame.image.load('bg.png')
 bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 
+
+#if theme is 1 load the sprites based on the level - star wars theme
+if theme == 1:
+    if level <= max_levels:
+        bg_img = pygame.image.load(levels[level-1][0])
+        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+        block_img = pygame.image.load(levels[level-1][1])
+        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+        ladder_img = pygame.image.load(levels[level-1][2])
+#if theme is 0 load the default sprites - original theme
+if theme == 0:
+    if level <= max_levels:
+        bg_img = pygame.image.load('bg.png')
+        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+        block_img = pygame.image.load('block2.png')
+        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
+        ladder_img = pygame.image.load('ladder.png') 
 #sounds
 #pygame.mixer.music.load('')
 #pygame.mixer.music.play(-1, 0.0, 1000)
@@ -130,7 +148,7 @@ def reset_level(level):
         pickle_in = open(f'level{level}_data', 'rb')
         world_data = pickle.load(pickle_in)
     world = World(world_data)
-
+    world_loaded = [world]
     return world
 
 class Buttons():
@@ -222,7 +240,7 @@ class Player():
 
             #check collision
             self.in_air = True #if player is in air - falling or jumping
-            for tile in world.tile_list:
+            for tile in world_loaded[0].tile_list:
             #check x
                 if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                     dx = 0
@@ -439,12 +457,14 @@ loaded = False #is map loaded - used for reskinning code
 while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
+    world_drawn = 0
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
         if path.exists(f'level{level}_data'):
             pickle_in = open(f'level{level}_data', 'rb')
             world_data = pickle.load(pickle_in)
         world = World(world_data)
+        world_loaded = [world]
         loaded = True
 
 #if theme is 1 load the sprites based on the level - star wars theme
@@ -483,13 +503,20 @@ while run: #while game is running
         level = 1
         score = 0
         world_data = []
-        world = reset_level(level)
+        world_loaded[0] = reset_level(level)
         gameover = 0
         score = 0
 #if game is running and the map is loaded run the game
     elif game and loaded:
         loaded = True
-        world.draw()
+        print(world_loaded[0])
+        print(world)
+        if len(world_loaded) <= 5:
+            world_loaded[0].draw()
+            world_drawn += 1
+        if world_drawn >= 5:
+            world_loaded.pop()
+
 #if game is running
         if gameover == 0:
             #blob_group.update()
@@ -514,7 +541,7 @@ while run: #while game is running
         if gameover == -1:
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
                 world_data = []
-                world = reset_level(level)
+                world_loaded[0] = reset_level(level)
                 gameover = 0
                 score = 0
 #if player passes level
@@ -523,7 +550,7 @@ while run: #while game is running
             loaded = False
             if level <= max_levels: #when level number is lower than total levels, resets levels
                 world_data = []
-                world = reset_level(level)
+                world_loaded[0] = reset_level(level)
                 gameover = 0
             else: #if player finishes last level, display text and reset game
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
