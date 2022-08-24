@@ -599,7 +599,7 @@ while run: #while game is running
         #    print("NEW DEVICE")
 
     pygame.display.update()
-multi().host_game('localhost', 9999)
+multi().connect_to_game('localhost', 9999)
 
 #when game is not running
 pygame.quit()
