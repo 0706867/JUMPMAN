@@ -142,6 +142,7 @@ def draw_text(text, font, text_col, x, y):
 #reset current level
 def reset_level(level):
     player.reset(screen_w //2 , 400)
+    player2.reset(screen_w //2 , 400)
     #blob_group.empty()
     #lava_group.empty()
     #exit_group.empty()
@@ -178,10 +179,13 @@ class multi():
             if not data:
                 break
             else:
-                data.decode('utf-8')
-                print(text + "client")
-                print(str(data) + "host")
+                datas = data.decode('utf-8').split('   ')
+                #print(text + " player 1")
+                print(str(datas) + " player 2")
+                #player2.other_player(datas)
         client.close()
+        return data
+
 
 multi()
 
@@ -207,33 +211,39 @@ class Buttons():
         return action
 
 class Player():
-    def __init__(self, x, y):
+    def __init__(self, x, y, up, down, left, right, jump):
         self.reset(x,y)
+        self.up = up
+        self.down = down
+        self.left = left
+        self.right = right 
+        self.jump = jump
+
 
     def update(self, gameover):
-        global player_pos
         dx = 0
         dy = 0
+        global player_pos 
         walk_cooldown = 5
         col_thresh = 20
         key = pygame.key.get_pressed()
         if gameover == 0:
             #play when keyboard is connected
-            if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
+            if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 self.jumped = True
                 self.vel_y = -10
-            if (key[pygame.K_SPACE]) == False: #if player is not pressing space, dont jump
+            if (key[self.jump]) == False: #if player is not pressing space, dont jump
                 self.jumped = False
-            if key[pygame.K_LEFT]: #when left key is pressed
+            if key[self.left]: #when left key is pressed
                 dx -= 2 #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1 #used for animation
                 self.direction = -1 #used for animation
-            if key[pygame.K_RIGHT] :
+            if key[self.right] :
                 dx += 2#moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1#used for animation
                 self.direction = 1#used for animation
-            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:#when left and right are not pressed
+            if key[self.left] == False and key[self.right] == False:#when left and right are not pressed
                 self.counter = 0 #stops on current image
                 self.index = 0 #used for animation
                 if self.direction == 1: #if direction is 1, use right facing images
@@ -276,7 +286,7 @@ class Player():
             self.in_air = True #if player is in air - falling or jumping
             for tile in world_loaded[0].tile_list:
             #check x
-                if tile[1].colliderect(player_pos.x + dx, player_pos.y,self.width, self.height ): #if player collides with walking blocks,stop moving
+                if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                     dx = 0
             #stop player from moving off screen
                 if player_pos.x <= 0: 
@@ -320,10 +330,10 @@ class Player():
                     #climb
                     dy = 0
                     #moving up when on a ladder
-                    if key[pygame.K_UP]: 
+                    if key[self.up]: 
                             dy -= 2
                     #moving down when on a ladder
-                    if key[pygame.K_DOWN] : 
+                    if key[self.down] : 
                             dy += 2
 
             #move the player
@@ -371,6 +381,11 @@ class Player():
         self.jumped = False
         self.direction = 0
         self.in_air = True
+
+    def other_player(self, player_pos):
+        self.rect.x = player_pos.x
+        self.rect.y = player_pos.y
+
 
 class World():
     def __init__(self,data):
@@ -473,7 +488,9 @@ class Exit(pygame.sprite.Sprite):
         self.rect.y = y
 
 world_data = []
-player = Player(screen_w //2 , 430)
+key = pygame.key.get_pressed()
+player = Player(screen_w //2 , 430,  pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
+player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 #lava_group = pygame.sprite.Group()
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
@@ -487,12 +504,17 @@ start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
-multi().connect_to_game('localhost', 9999)
+
+
+multi().host_game('localhost', 9999)
+
 while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
-    print(player_pos)
+    if str(multi().handle_connection):
+        player2 = Player(screen_w //3 , 430, pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
+    
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
         if path.exists(f'level{level}_data'):
@@ -557,7 +579,10 @@ while run: #while game is running
                 score += 1
                 if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                     gameover = 1
-
+            if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
+                score += 1
+                if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+                    gameover = 1
                 #coin_fx.play()
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
@@ -569,6 +594,7 @@ while run: #while game is running
         #lava_group.draw(screen)
         coin_group.draw(screen)
         gameover = player.update(gameover)
+        gameover = player2.update(gameover)
 #if player dies
         if gameover == -1:
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
@@ -598,6 +624,7 @@ while run: #while game is running
             run = False
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
+
     
     pygame.display.update()
 
