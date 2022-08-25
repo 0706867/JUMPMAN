@@ -207,8 +207,13 @@ class Buttons():
         return action
 
 class Player():
-    def __init__(self, x, y):
+    def __init__(self, x, y, up, down, left, right):
         self.reset(x,y)
+        self.up = up
+        self.left = left
+        self.down = down
+        self.right = right 
+
 
     def update(self, gameover):
         global player_pos
@@ -219,21 +224,21 @@ class Player():
         key = pygame.key.get_pressed()
         if gameover == 0:
             #play when keyboard is connected
-            if (key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
+            if (self.up) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 self.jumped = True
                 self.vel_y = -10
-            if (key[pygame.K_SPACE]) == False: #if player is not pressing space, dont jump
+            if (self.up) == False: #if player is not pressing space, dont jump
                 self.jumped = False
-            if key[pygame.K_LEFT]: #when left key is pressed
+            if self.left: #when left key is pressed
                 dx -= 2 #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1 #used for animation
                 self.direction = -1 #used for animation
-            if key[pygame.K_RIGHT] :
+            if self.right :
                 dx += 2#moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1#used for animation
                 self.direction = 1#used for animation
-            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:#when left and right are not pressed
+            if self.left == False and self.right == False:#when left and right are not pressed
                 self.counter = 0 #stops on current image
                 self.index = 0 #used for animation
                 if self.direction == 1: #if direction is 1, use right facing images
@@ -473,7 +478,9 @@ class Exit(pygame.sprite.Sprite):
         self.rect.y = y
 
 world_data = []
-player = Player(screen_w //2 , 430)
+key = pygame.key.get_pressed()
+player = Player(screen_w //2 , 430, key[pygame.K_SPACE],key[pygame.K_DOWN], key[pygame.K_LEFT], key[pygame.K_RIGHT])
+player2 = Player(screen_w //3 , 430, key[pygame.K_w], key[pygame.K_s], key[pygame.K_a], key[pygame.K_d])
 #lava_group = pygame.sprite.Group()
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
@@ -487,7 +494,7 @@ start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
-multi().host_game('localhost', 9999)
+#multi().host_game('localhost', 9999)
 while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
@@ -569,6 +576,7 @@ while run: #while game is running
         #lava_group.draw(screen)
         coin_group.draw(screen)
         gameover = player.update(gameover)
+        gameover = player2.update(gameover)
 #if player dies
         if gameover == -1:
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
