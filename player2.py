@@ -142,7 +142,7 @@ def draw_text(text, font, text_col, x, y):
 #reset current level
 def reset_level(level):
     player.reset(screen_w //2 , 400)
-    player2.reset(screen_w //2 , 400)
+#    player2.reset(screen_w //2 , 400)
     #blob_group.empty()
     #lava_group.empty()
     #exit_group.empty()
@@ -179,9 +179,9 @@ class multi():
             if not data:
                 break
             else:
-                datas = data.decode('utf-8')
+                datas = data.decode('utf-8').split('   ')
                 #print(text + " player 1")
-                print(datas[2] + " player 1") #- datas[x] x chanegs the number that shows, e.g [0] will show 3 in 340, [1] will show 4,etc
+                print(str(datas) + " player 1")
                 #player2.other_player(datas)
         client.close()
         return data
@@ -386,6 +386,15 @@ class Player():
         self.rect.x = player_pos.x
         self.rect.y = player_pos.y
 
+class Player2():
+    def __init__(self, img, x, y):
+        self.img = img
+        self.x = x
+        self.y = y
+
+    def update(self):
+        self.img = pygame.image.load(self.img)
+        screen.blit(self.img, (self.x, self.y))
 
 class World():
     def __init__(self,data):
@@ -489,7 +498,7 @@ class Exit(pygame.sprite.Sprite):
 
 world_data = []
 key = pygame.key.get_pressed()
-player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
+player = Player(screen_w //2 , 430,  pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 #lava_group = pygame.sprite.Group()
 #blob_group = pygame.sprite.Group()
@@ -513,7 +522,8 @@ while run: #while game is running
     screen.blit(bg_img, (0,0))
     world_drawn = 0
     if str(multi().handle_connection):
-        player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
+        player2 = Player2('climb.png', 200,200)
+        player2.update()
     
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
@@ -579,10 +589,10 @@ while run: #while game is running
                 score += 1
                 if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                     gameover = 1
-            if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
-                score += 1
-                if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
-                    gameover = 1
+#            if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
+#                score += 1
+#                if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+#                    gameover = 1
                 #coin_fx.play()
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
@@ -594,7 +604,7 @@ while run: #while game is running
         #lava_group.draw(screen)
         coin_group.draw(screen)
         gameover = player.update(gameover)
-        gameover = player2.update(gameover)
+#        gameover = player2.update(gameover)
 #if player dies
         if gameover == -1:
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
