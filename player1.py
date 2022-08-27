@@ -180,17 +180,34 @@ class multi():
                 break
             else:
                 datas = data.decode('utf-8')
-                if datas[1] >= str(1):
-                    datas1 = datas[1] #[x00, 000]
-                    datas2 = datas[2] #[0x0, 000]
-                    datas3 = datas[3] #[00x, 000]
-                    datas6 = datas[6] #[000, x00]
-                    datas7 = datas[7] #[000, 0x0]
-                    datas8 = datas[8] #[000, 00x]
-                    datasx = int(datas1+datas2+datas3)
-                    datasy = int(datas6+datas7+datas8)
+                if datas[2] >= str(0):
+                    datas1 = datas[1] 
+                    datas2 = datas[2] 
+                    datas3 = datas[3] 
+                    datas4 = datas[4] 
+                    datas5 = datas[5] 
+                    datas6 = datas[6] 
+                    datas7 = datas[7]
+                    datas8 = datas[8] 
+                    #       01234567
+                    #len 8  [0, 000]
+                    #       012345678
+                    #len 9  [00, 000]
+                    #       0123456789
+                    #len 10 [000, 000]
+                    datasx = 2
+                    datasy = 2
+                    if len(datas) == 10:
+                        datasx = int(str(datas1)+str(datas2)+str(datas3))
+                        datasy = int(datas6+datas7+datas8)
+                    if len(datas) == 9:
+                        datasx = int(str(datas1)+str(datas2))
+                        datasy = int(datas5+datas6+datas7)
+                    if len(datas) == 8:
+                        datasx = int(str(datas1))
+                        datasy = int(datas4+datas5+datas6)
+                    
                     #print(text + " player 1")
-                    print(str(datasx) + str(datasy))
                     #print(str(datas[7]))
                     player2 = Player2('climb.png', datasx,datasy)
                     player2.update()
@@ -403,6 +420,7 @@ class Player2():
 
     def update(self):
         self.img = pygame.image.load(self.img)
+        self.img = pygame.transform.scale(self.img, (tile_size,tile_size))
         screen.blit(self.img, (self.x, self.y))
 
 class World():
@@ -530,9 +548,6 @@ while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
-    if str(multi().handle_connection):
-        player2 = Player2('climb.png', 200,200)
-        player2.update()
     
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
