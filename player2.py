@@ -52,7 +52,7 @@ max_levels = 3
 score = 0
 theme = 0
 world_loaded = []
-player_pos = Vector2(0,0)
+player_pos = Vector2(int(0),int(0))
 
 #colours
 white = (255,255,255)
@@ -60,7 +60,7 @@ blue = (0,0,200)
 
 #screen setup
 screen = pygame.display.set_mode((screen_w, screen_h))
-pygame.display.set_caption('Platformer')
+pygame.display.set_caption('Client')
 
 #images
 bg_img = pygame.image.load('bg.png')
@@ -179,15 +179,24 @@ class multi():
             if not data:
                 break
             else:
-                datas = data.decode('utf-8').split('   ')
-                #print(text + " player 1")
-                print(str(datas) + " player 1")
-                #player2.other_player(datas)
+                datas = data.decode('utf-8')
+                if datas[1] >= str(1):
+                    datas1 = datas[1] #[x00, 000]
+                    datas2 = datas[2] #[0x0, 000]
+                    datas3 = datas[3] #[00x, 000]
+                    datas6 = datas[6] #[000, x00]
+                    datas7 = datas[7] #[000, 0x0]
+                    datas8 = datas[8] #[000, 00x]
+                    datasx = int(datas1+datas2+datas3)
+                    datasy = int(datas6+datas7+datas8)
+                    #print(text + " player 1")
+                    print(str(datasx) + str(datasy))
+                    #print(str(datas[7]))
+                    player2 = Player2('climb.png', datasx,datasy)
+                    player2.update()
         client.close()
         return data
 
-
-multi()
 
 class Buttons():
     def __init__(self, x, y, image):
