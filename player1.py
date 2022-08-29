@@ -1,3 +1,4 @@
+from matplotlib.pyplot import connect
 import pygame
 import os
 import platform
@@ -53,6 +54,7 @@ score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
+score_to_pass = 10
 
 #colours
 white = (255,255,255)
@@ -77,7 +79,10 @@ climb_img = pygame.transform.scale(climb_img, (tile_size,tile_size))
 restart_img = pygame.image.load('restart_btn.png')
 start_img = pygame.image.load('start_btn.png')
 exit_img = pygame.image.load('exit_btn.png')
-
+singleplayer_img = pygame.image.load('singleplayer.png')
+singleplayer_img = pygame.transform.scale(singleplayer_img, (120, 120))
+versus_img = pygame.image.load('versus.png')
+versus_img = pygame.transform.scale(versus_img, (120, 120))
 
 #default theme
 level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
@@ -91,7 +96,7 @@ level_2 = ['level 2/hall_bg.png', 'level 2/hall_block.png','level 2/hall_ladder1
 #level 3    background image            block image             ladder image
 level_3 = ['level 3/desert_bg.png', 'level 3/desert_block.png', 'level 3/desert_ladder.png']
 
-#level 4    bakcground image            character face             character death face     character idle image
+#level 4    background image            character face             character death face     character idle image
 level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.png', 'level 4/luke_idle.png',
 #enemy idle     enemy idle animation 2  enemy bullet        enemy death face            enemy face              enemy shoot anim
 'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
@@ -158,9 +163,10 @@ def reset_level(level):
 #Multiplayer
 class multi():
     def host_game(self, host, port):
+        global multiple
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((host, port))
-        server.listen(1)
+        server.listen(10)
 
         client, addr = server.accept()
         threading.Thread(target=self.handle_connection, args=(client,)).start()
@@ -206,11 +212,19 @@ class multi():
                     if len(datas) == 8:
                         datasx = int(str(datas1))
                         datasy = int(datas4+datas5+datas6)
-                    
+                    global coin_group
+                    global player2
+                    global score
+                    global gameover
+                    global score_to_pass
                     #print(text + " player 1")
                     #print(str(datas[7]))
-                    player2 = Player2('climb.png', datasx,datasy)
+                    player2 = Player2(datasx,datasy)
                     player2.update()
+                    if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
+                        score += 1      
+                        if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+                            gameover = 1  
         client.close()
         return data
 
@@ -255,21 +269,21 @@ class Player():
         key = pygame.key.get_pressed()
         if gameover == 0:
             #play when keyboard is connected
-            if (key[self.jump] or key[pygame.K_SPACE]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
+            if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 self.jumped = True
                 self.vel_y = -10
-            if (key[self.jump]or key[pygame.K_SPACE]) == False: #if player is not pressing space, dont jump
+            if (key[self.jump]) == False: #if player is not pressing space, dont jump
                 self.jumped = False
-            if key[self.left] or key[pygame.K_LEFT]: #when left key is pressed
+            if key[self.left]: #when left key is pressed
                 dx -= 2 #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1 #used for animation
                 self.direction = -1 #used for animation
-            if key[self.right]or key[pygame.K_RIGHT] :
+            if key[self.right] :
                 dx += 2#moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1#used for animation
                 self.direction = 1#used for animation
-            if (key[self.left]or key[pygame.K_LEFT]) == False and (key[self.right]  or key[pygame.K_RIGHT]) == False:#when left and right are not pressed
+            if key[self.left] == False and key[self.right] == False:#when left and right are not pressed
                 self.counter = 0 #stops on current image
                 self.index = 0 #used for animation
                 if self.direction == 1: #if direction is 1, use right facing images
@@ -356,10 +370,10 @@ class Player():
                     #climb
                     dy = 0
                     #moving up when on a ladder
-                    if key[self.up] or key[pygame.K_UP]: 
+                    if key[self.up]: 
                             dy -= 2
                     #moving down when on a ladder
-                    if key[self.down]or key[pygame.K_DOWN] : 
+                    if key[self.down] : 
                             dy += 2
 
             #move the player
@@ -413,15 +427,31 @@ class Player():
         self.rect.y = player_pos.y
 
 class Player2():
-    def __init__(self, img, x, y):
-        self.img = img
-        self.x = x
-        self.y = y
+    def __init__(self, x, y):
+        self.reset(x,y)
 
     def update(self):
-        self.img = pygame.image.load(self.img)
-        self.img = pygame.transform.scale(self.img, (tile_size,tile_size))
-        screen.blit(self.img, (self.x, self.y))
+        global player_pos 
+        screen.blit(self.image, self.rect)
+
+    def reset(self, x, y): #reset variables
+        self.images_right = []
+        self.images_left = []
+        self.index = 0
+        self.counter = 0
+        for num in range(1,3):
+            img_right = pygame.image.load(f'guy{num}.png')
+            img_right = pygame.transform.scale(img_right, (tile_size,tile_size))
+            img_left = pygame.transform.flip(img_right, True, False)
+            self.images_right.append(img_right)
+            self.images_left.append(img_left)
+        self.dead_image = pygame.image.load('idle.png')
+        self.image = self.images_right[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
 
 class World():
     def __init__(self,data):
@@ -525,7 +555,7 @@ class Exit(pygame.sprite.Sprite):
 
 world_data = []
 key = pygame.key.get_pressed()
-player = Player(screen_w //2 , 430,  pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
+player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 #lava_group = pygame.sprite.Group()
 #blob_group = pygame.sprite.Group()
@@ -537,12 +567,15 @@ score_coin = Coin(tile_size //2, tile_size //2)
 restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
 exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
 start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
+solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img)
+multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img)
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
-
-
-#multi().host_game('localhost', 9999)
+multiple = False
+solo = False
+game = False
+run_game = False
 
 while run: #while game is running
     clock.tick(fps)
@@ -557,7 +590,7 @@ while run: #while game is running
         world = World(world_data)
         world_loaded = [world]
         loaded = True
-
+    
 #if theme is 1 load the sprites based on the level - star wars theme
     if theme == 1:
         if level <= max_levels:
@@ -584,20 +617,34 @@ while run: #while game is running
 #if the current scene is the main menu
     if main:
 #draw and exit and start button, when pressed exit, exits the game and start, stop the menu scene and start games scene
-        if  exit_button.draw():
+        if exit_button.draw():
             run = False
         if start_button.draw():
             main = False
             game = True 
-#reset game variables
+    if game:
+        #reset game variables
         level = 1
         score = 0
         world_data = []
         world_loaded[0] = reset_level(level)
         gameover = 0
-        score = 0
-#if game is running and the map is loaded run the game
-    elif game and loaded:
+
+        if solo_button.draw():
+            game = False
+            solo = True
+        if multi_button.draw():
+            game = False
+            multiple = True
+
+        if multiple:
+            multi().host_game('localhost', 9999)
+            run_game = True
+
+        if solo:
+            run_game = True
+    
+    if run_game and loaded:
         loaded = True
         if len(world_loaded) <= 5:
             world_loaded[0].draw()
@@ -611,12 +658,8 @@ while run: #while game is running
 #update score
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
-                if score % 12 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+                if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                     gameover = 1
-#            if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
-#                score += 1
-#                if score % 2 == 0: #if score is divisible by 2 and provides a whole number answer, player can pass the level
-#                    gameover = 1
                 #coin_fx.play()
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
@@ -636,6 +679,7 @@ while run: #while game is running
                 world_loaded[0] = reset_level(level)
                 gameover = 0
                 score = 0
+                
 #if player passes level
         if gameover == 1: #next level starts and the world is not loaded
             level += 1 
@@ -644,14 +688,17 @@ while run: #while game is running
                 world_data = []
                 world_loaded[0] = reset_level(level)
                 gameover = 0
+                coin_group.empty()
             else: #if player finishes last level, display text and reset game
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
                 #restart game
                 if restart_button.draw():
-                    game=False
+                    
                     main = True
-                    loaded = False
-
+                    game = False
+                    run_game = False
+                    solo = False 
+                    multiple = False
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
