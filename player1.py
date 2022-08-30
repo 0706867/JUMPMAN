@@ -149,7 +149,7 @@ def reset_level(level):
     player.reset(screen_w //2 , 400)
 #    player2.reset(screen_w //2 , 400)
     #blob_group.empty()
-    #lava_group.empty()
+    robot_group.empty()
     #exit_group.empty()
     platform_group.empty()
     coin_group.empty()
@@ -348,23 +348,18 @@ class Player():
                         self.vel_y = 0
                         self.in_air = False
 
-            #enemy
-            #if pygame.sprite.spritecollide(self, blob_group, False):
-            #    gameover = -1
+#enemy
+#robot
+            if pygame.sprite.spritecollide(self, robot_group, False):
+                gameover = -1
                 #gameover_fx.play()
-
-            #lava
-            #if pygame.sprite.spritecollide(self, lava_group, False):
-            #    gameover = -1
-                #gameover_fx.play()
-            #fall to death
+#fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
             
-            #ladders
+#ladders
             for platform in platform_group:
-                #y
-        #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+#when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
                 if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                     self.image = climb_img
                     #climb
@@ -376,11 +371,11 @@ class Player():
                     if key[self.down] : 
                             dy += 2
 
-            #move the player
+#move the player
             self.rect.x += dx
             self.rect.y += dy
             player_pos = Vector2(self.rect.x, self.rect.y)
-            #animation
+#animation
             if self.counter >= walk_cooldown:
                 self.counter = 0
                 self.index += 1
@@ -421,10 +416,6 @@ class Player():
         self.jumped = False
         self.direction = 0
         self.in_air = True
-
-    def other_player(self, player_pos):
-        self.rect.x = player_pos.x
-        self.rect.y = player_pos.y
 
 class Player2():
     def __init__(self, x, y):
@@ -480,9 +471,9 @@ class World():
                     lad = pygame.transform.flip(ladder_img, True, False)
                     platform.image = pygame.transform.scale(lad, (tile_size, tile_size))
                     platform_group.add(platform)
-                if tile == 6:
-                    lava = Lava(col_count * tile_size, row_count * tile_size)
-                    #lava_group.add(lava)
+                if tile == 5:
+                    robot = Enemy2(col_count * tile_size, row_count * tile_size)
+                    robot_group.add(robot)
                 if tile == 7:
                     coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2))
                     coin_group.add(coin)
@@ -496,10 +487,30 @@ class World():
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
 
-class Enemy(pygame.sprite.Sprite):
+class Enemy1():
+    def __init__(self, x, y):
+        self.image = pygame.image.load('enemy/bullet.png')
+        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self):
+        move = True
+        while move:
+            self.rect.x += 2
+            if self.rect.x >= screen_w:
+                self.rect.x = 0
+                self.rect.y += 2
+                move = False
+            print('asdsa')
+            screen.blit(self.image,self.rect)
+
+class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('climb.png')
+        self.image = pygame.image.load('enemy/enemy_face.png')
+        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -557,7 +568,7 @@ world_data = []
 key = pygame.key.get_pressed()
 player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
-#lava_group = pygame.sprite.Group()
+robot_group = pygame.sprite.Group()
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
@@ -654,7 +665,16 @@ while run: #while game is running
 
 #if game is running
         if gameover == 0:
-            #blob_group.update()
+#display different enemy based on the level
+            if level == 1:
+                bullet = Enemy1(20,20)
+                bullet.update()
+            if level == 2:
+                robot_group.update()
+                robot_group.draw(screen)
+            if level == 3:
+                enemy = Enemy2(240,40)
+                enemy.enemy3()
 #update score
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
@@ -668,7 +688,6 @@ while run: #while game is running
 
         #blob_group.draw(screen)
         platform_group.draw(screen)
-        #lava_group.draw(screen)
         coin_group.draw(screen)
         gameover = player.update(gameover)
 #        gameover = player2.update(gameover)

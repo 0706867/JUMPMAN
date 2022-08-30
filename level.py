@@ -33,6 +33,7 @@ start_img = pygame.image.load('start_btn.png')
 exit_img = pygame.image.load('exit_btn.png')
 load_img = pygame.image.load('coin.png')
 save_img = pygame.image.load('exit_btn.png')
+robot_img = pygame.image.load('enemy/enemy_face.png')
 
 #define game variables
 clicked = False
@@ -89,6 +90,11 @@ def draw_world():
 				if world_data[row][col] == 4:
 					#ladder right side blocks
 					imgs = pygame.transform.flip(ladder_img, True, False)
+					img = pygame.transform.scale(imgs, (tile_size,cols))
+					screen.blit(img, (col * tile_size, row * cols))
+				if world_data[row][col] == 5:
+					#ladder right side blocks
+					imgs = pygame.transform.flip(robot_img, True, False)
 					img = pygame.transform.scale(imgs, (tile_size,cols))
 					screen.blit(img, (col * tile_size, row * cols))
 				if world_data[row][col] == 7:
