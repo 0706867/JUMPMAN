@@ -1,9 +1,9 @@
-from matplotlib.pyplot import connect
+from random import random
+from random import randint
 import pygame
 import os
 import platform
 from pygame import Vector2, mixer
-from pygame.locals import *
 import pickle
 from os import path
 import socket
@@ -487,25 +487,78 @@ class World():
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
 
-class Enemy1():
+#bullet
+class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('enemy/bullet.png')
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.dx = 10
+        self.dy = 10
+        self.direction = 1
 
     def update(self):
-        move = True
-        while move:
-            self.rect.x += 2
+        rotated = False
+        player_detectedy = False
+        player_detectedx = False
+        detected = False
+        if self.direction == 0: #move horizontally
+            self.rect.x += self.dx
             if self.rect.x >= screen_w:
+                self.direction = 1
+                self.rect.y = 0
+                self.rect.x = randint(0,screen_w-30)
+                rotated = True
+            if self.rect.x <= player_pos.x:
+                while not detected:
+                    if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
+                        player_detectedy = True
+                        detected = True
+                        print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
+            if player_detectedy:
+                if self.rect.x <= screen_w:
+                    self.dx = 20
+            else:
+                self.dx = 2
+        
+        if self.direction == 1: #move vertically
+            self.rect.y += self.dy
+            if self.rect.y >= screen_h- 150:
+                self.direction = 0
                 self.rect.x = 0
-                self.rect.y += 2
-                move = False
-            print('asdsa')
-            screen.blit(self.image,self.rect)
+                #self.rect.y = randint(0,screen_h-180)
+                self.rect.y = 400
+                rotated = True
+                
+            
+            
+            if self.rect.y <= player_pos.y:
+                #while detected == False:
+                if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
+                    player_detectedx = True
+                    print("selfy: " + str(self.rect.x) +"playery: " + str(player_pos.x))
+            if player_detectedx:
+                self.dy = 20
+            else:
+                self.dy = 2
 
+#rotate based on direction
+        if rotated:
+            if self.direction == 0: #rotate horizontally
+                self.image = pygame.transform.rotate(self.image, 90)
+                rotated = False
+            if self.direction == 1: #rotate vertically
+                self.image = pygame.transform.rotate(self.image, -90)
+                rotated = False
+        
+        
+        
+
+#pac man ghosts
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -569,6 +622,9 @@ key = pygame.key.get_pressed()
 player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 robot_group = pygame.sprite.Group()
+bullet_group = pygame.sprite.Group()
+bullet = Enemy1(randint(0,screen_w-30),randint(0,screen_h-180))
+bullet_group.add(bullet)
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
@@ -665,10 +721,12 @@ while run: #while game is running
 
 #if game is running
         if gameover == 0:
+            platform_group.draw(screen)
+            coin_group.draw(screen)
 #display different enemy based on the level
             if level == 1:
-                bullet = Enemy1(20,20)
-                bullet.update()
+                bullet_group.update()
+                bullet_group.draw(screen)
             if level == 2:
                 robot_group.update()
                 robot_group.draw(screen)
@@ -687,8 +745,6 @@ while run: #while game is running
 
 
         #blob_group.draw(screen)
-        platform_group.draw(screen)
-        coin_group.draw(screen)
         gameover = player.update(gameover)
 #        gameover = player2.update(gameover)
 #if player dies
