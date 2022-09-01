@@ -486,7 +486,7 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
-
+player_detectedy = False
 #bullet
 class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -503,7 +503,7 @@ class Enemy1(pygame.sprite.Sprite):
 
     def update(self):
         rotated = False
-        player_detectedy = False
+        global player_detectedy 
         player_detectedx = False
         detected = False
         if self.direction == 0: #move horizontally
@@ -519,6 +519,8 @@ class Enemy1(pygame.sprite.Sprite):
                         player_detectedy = True
                         detected = True
                         print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
+                    else:
+                        self.dx = 2
             if player_detectedy:
                 if self.rect.x <= screen_w:
                     self.dx = 20
