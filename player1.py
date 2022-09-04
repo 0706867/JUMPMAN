@@ -486,8 +486,12 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
-player_detectedy = False
+
 #bullet
+bullet_is_behind = False
+bullet_is_ahead = False
+bullet_is_above = False
+bullet_is_below = False
 class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -503,31 +507,62 @@ class Enemy1(pygame.sprite.Sprite):
 
     def update(self):
         rotated = False
-        global player_detectedy 
-        player_detectedx = False
+        global bullet_is_behind
+        global bullet_is_ahead 
+        global bullet_is_above
+        global bullet_is_below
+        bullet_is_below = False
+        bullet_is_above = False
+        bullet_is_ahead = False
+        bullet_is_behind = False
         detected = False
-        if self.direction == 0: #move horizontally
+        print(self.dx)
+ #move horizontally
+        if self.direction == 0:
             self.rect.x += self.dx
-            if self.rect.x >= screen_w:
+            self.dx = 2
+            #reset
+            if self.rect.x >= screen_w or self.rect.x <= 0:
                 self.direction = 1
                 self.rect.y = 0
                 self.rect.x = randint(0,screen_w-30)
                 rotated = True
-            if self.rect.x <= player_pos.x:
-                while not detected:
-                    if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
-                        player_detectedy = True
-                        detected = True
-                        print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
-                    else:
-                        self.dx = 2
-            if player_detectedy:
+            #check y
+            if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
+                #below player
+                if self.rect.y >= player_pos.y:
+                    bullet_is_below = True
+                #above player
+                if self.rect.y <= player_pos.y:
+                    bullet_is_above = True
+            if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
+                #ahead of player
+                if self.rect.x >= player_pos.x:
+                    bullet_is_ahead = True
+                #behind player
+                if self.rect.x <= player_pos.x:
+                    bullet_is_behind = True
+
+#print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
+                    
+            #if player is detected move bullet faster   
+            if bullet_is_behind:
                 if self.rect.x <= screen_w:
                     self.dx = 20
-            else:
-                self.dx = 2
+            if bullet_is_ahead:
+                if self.rect.x >= 0:
+                    self.dx = -20
+            if bullet_is_above:
+                if self.rect.y <= screen_h-150:
+                    self.dy = 20
+            if bullet_is_below:
+                if self.rect.x >= 0:
+                    self.dy = -20
+            #if not move bullet slower
         
-        if self.direction == 1: #move vertically
+
+#move vertically
+        if self.direction == 1: 
             self.rect.y += self.dy
             if self.rect.y >= screen_h- 150:
                 self.direction = 0
@@ -535,18 +570,48 @@ class Enemy1(pygame.sprite.Sprite):
                 #self.rect.y = randint(0,screen_h-180)
                 self.rect.y = 400
                 rotated = True
-                
+                bullet_isx = False
+        
             
             
-            if self.rect.y <= player_pos.y:
-                #while detected == False:
-                if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
-                    player_detectedx = True
-                    print("selfy: " + str(self.rect.x) +"playery: " + str(player_pos.x))
-            if player_detectedx:
-                self.dy = 20
+            #check y
+            if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
+                #below player
+                if self.rect.y >= player_pos.y:
+                    bullet_is_below = True
+                    self.dy = -2
+                #above player
+                if self.rect.y <= player_pos.y:
+                    bullet_is_above = True
+                    self.dy = 2
+            #check x
+            if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
+                #ahead of player
+                if self.rect.x >= player_pos.x:
+                    bullet_is_ahead = True
+                    self.dx = -2
+                #behind player
+                if self.rect.x <= player_pos.x:
+                    bullet_is_behind = True
+                    self.dx = 2
+#print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
+                    
+            #if player is detected move bullet faster   
+            if bullet_is_ahead:
+                if self.rect.x <= screen_w:
+                    self.dx = 20
+            if bullet_is_behind:
+                if self.rect.x >= 0:
+                    self.dx = -20
+            if bullet_is_above:
+                if self.rect.y <= screen_h-150:
+                    self.dy = 20
+            if bullet_is_below:
+                if self.rect.x >= 0:
+                    self.dy = -20
+            #if not move bullet slower
             else:
-                self.dy = 2
+                self.dx = 2
 
 #rotate based on direction
         if rotated:
