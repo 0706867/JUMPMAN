@@ -230,20 +230,26 @@ class multi():
 
 
 class Buttons():
-    def __init__(self, x, y, image):
+    def __init__(self, x, y, image, button, tag):
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.clicked = False
+        self.button = button
+        self.tag = tag
 
     def draw(self):
+        key = pygame.key.get_pressed()
         action = False
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
             if pygame.mouse.get_pressed()[0] == 1:
                 action = True
                 self.clicked = True
+        if key[self.button] and self.tag == button_options_main[current_selection]:
+            action = True
+            self.clicked = True
 
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
@@ -720,11 +726,11 @@ coin_group = pygame.sprite.Group()
 #exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
 #coin_group.add(score_coin)
-restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
-exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
-start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
-solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img)
-multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img)
+restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img, pygame.K_k, "restart")
+exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img, pygame.K_k, "exit")
+start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img, pygame.K_k, "start")
+solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img, pygame.K_k, "solo")
+multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img, pygame.K_k, "multi")
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
@@ -732,6 +738,10 @@ multiple = False
 solo = False
 game = False
 run_game = False
+
+current_selection = 3
+button_options_main = {0: "start" , 1: "options", 2: "exit" }
+button_options_game = {0: "solo" ,1:  "multi", 2: "back"}
 
 while run: #while game is running
     clock.tick(fps)
@@ -770,6 +780,11 @@ while run: #while game is running
         theme = 1
         loaded = False
 #if the current scene is the main menu
+    if current_selection <= 0:
+        current_selection = 3
+    if current_selection >= 3:
+        current_selection = 0
+    print(str(button_options_main[current_selection]))
     if main:
 #draw and exit and start button, when pressed exit, exits the game and start, stop the menu scene and start games scene
         if exit_button.draw():
@@ -825,9 +840,10 @@ while run: #while game is running
                 enemy = Enemy2(240,40)
                 enemy.enemy3()
 #update score
+            print(len(coin_group))
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
-                if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+                if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
                     gameover = 1
                 #coin_fx.play()
 #display score
@@ -876,6 +892,11 @@ while run: #while game is running
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.KEYDOWN:
+            if pygame.key.get_pressed()[pygame.K_LEFT]:
+                current_selection -=1
+            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                current_selection +=1
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
 
