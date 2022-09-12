@@ -607,49 +607,46 @@ class Enemy1(pygame.sprite.Sprite):
                     self.bullet_is_behind = True
                     self.bullet_is_ahead = False
                     self.detected = True
-        
-            
 
     #if player is detected move bullet faster   
+        #if the bullet is behind the player
         if self.bullet_is_behind:
+            #if the bullet's x is less than the end of the screen increase the speed
            if self.rect.x <= screen_w:
 #                print('behind2')
                 self.dx = self.fastspeed
                 self.dy = 0
                 self.rect.y += self.dy
                 self.rect.x += self.dx
+
+        #if the bullet is ahead of the player
         if self.bullet_is_ahead:
+            #if the bullet's x is greater than the start of the screen increase the speed
             if self.rect.x >= 0:
 #                print('ahead2')
                 self.dx = -self.fastspeed
                 self.dy = 0
                 self.rect.y += self.dy
                 self.rect.x += self.dx
+
+        #if the bullet is above the player
         if self.bullet_is_above:
+            #if the bullet's y is less than the end of the screen increase the speed
             if self.rect.y <= screen_h-150:
 #                print('above2')
                 self.dy = self.fastspeed
                 self.dx = 0
                 self.rect.y += self.dy
                 self.rect.x += self.dx
+        #if the bullet is below the player
         if self.bullet_is_below:
+            #if the bullet's y is greater than the start of the screen increase the speed
             if self.rect.y >= 0:
 #                print('below2')
                 self.dy = -self.fastspeed
                 self.dx = 0
                 self.rect.y += self.dy
                 self.rect.x += self.dx
-
-        if rotated:
-            if self.direction == 0: #rotate horizontally
-                #self.image = pygame.transform.rotate(self.image, 90)
-                rotated = False
-            if self.direction == 1: #rotate vertically
-                #self.image = pygame.transform.rotate(self.image, -90)
-                rotated = False
-        
-        
-        
 
 #pac man ghosts
 class Enemy2(pygame.sprite.Sprite):
