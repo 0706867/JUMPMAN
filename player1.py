@@ -353,6 +353,9 @@ class Player():
             if pygame.sprite.spritecollide(self, robot_group, False):
                 gameover = -1
                 #gameover_fx.play()
+#bullet
+            if pygame.sprite.spritecollide(self, bullet_group, False):
+                gameover = -1
 #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
@@ -488,10 +491,6 @@ class World():
             screen.blit(tile[0], tile[1])
 
 #bullet
-bullet_is_behind = False
-bullet_is_ahead = False
-bullet_is_above = False
-bullet_is_below = False
 class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -499,127 +498,154 @@ class Enemy1(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
         self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
+        self.speed = 2
+        self.fastspeed = 5
         self.rect.x = x
         self.rect.y = y
         self.dx = 10
         self.dy = 10
         self.direction = 1
+        self.detected = False
+        self.bullet_is_behind = False
+        self.bullet_is_ahead = False
+        self.bullet_is_above = False
+        self.bullet_is_below = False
 
     def update(self):
+        pos = pygame.mouse.get_pos()
+        #self.rect.x = pos[0]
+        #self.rect.y = pos[1]
         rotated = False
-        global bullet_is_behind
-        global bullet_is_ahead 
-        global bullet_is_above
-        global bullet_is_below
-        bullet_is_below = False
-        bullet_is_above = False
-        bullet_is_ahead = False
-        bullet_is_behind = False
-        detected = False
-        print(self.dx)
- #move horizontally
+    #reset
+        #goes outside screen - left and right
+        if self.rect.x >= screen_w-20 or self.rect.x <= 0:
+            self.image = pygame.transform.rotate(self.image, 90)
+            self.direction = 1
+            rotated = True
+            self.bullet_is_ahead = False
+            self.bullet_is_below = False
+            self.bullet_is_behind = False
+            self.bullet_is_above = False
+            self.detected = False
+            if self.rect.x >= screen_w-20:
+                print('out right')
+                self.rect.y = 10
+                self.rect.x = randint(50,screen_w-50)
+                self.dy = self.speed
+            if self.rect.x <= 0:
+                print('out left')
+                self.rect.y = 10
+                self.rect.x = randint(50,screen_w-50)
+                self.dy = -self.speed
+        #goes outside screen - up and down
+        if self.rect.y >= screen_h-180 or self.rect.y <= 0:
+            self.direction = 0
+            self.image = pygame.transform.rotate(self.image, -90)
+            rotated = True
+            self.bullet_is_ahead = False
+            self.bullet_is_below = False
+            self.bullet_is_behind = False
+            self.bullet_is_above = False
+            self.detected = False
+            if self.rect.y >= screen_h-180:
+                print('out down')
+                self.rect.y = randint(50,screen_h-200)
+                self.rect.x = screen_w-20
+                self.dx = -self.speed
+            if self.rect.y <= 0:
+                print('out up')
+                self.rect.y = randint(50,screen_h-200)
+                self.rect.x = 10
+                self.dx = self.speed
+        if pygame.key.get_pressed()[pygame.K_y]:
+            pass
+    #move horizontally
         if self.direction == 0:
+            self.dy = 0
             self.rect.x += self.dx
-            self.dx = 2
-            #reset
-            if self.rect.x >= screen_w or self.rect.x <= 0:
-                self.direction = 1
-                self.rect.y = 0
-                self.rect.x = randint(0,screen_w-30)
-                rotated = True
-            #check y
-            if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
-                #below player
-                if self.rect.y >= player_pos.y:
-                    bullet_is_below = True
-                #above player
-                if self.rect.y <= player_pos.y:
-                    bullet_is_above = True
-            if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
-                #ahead of player
-                if self.rect.x >= player_pos.x:
-                    bullet_is_ahead = True
-                #behind player
-                if self.rect.x <= player_pos.x:
-                    bullet_is_behind = True
-
-#print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
-                    
-            #if player is detected move bullet faster   
-            if bullet_is_behind:
-                if self.rect.x <= screen_w:
-                    self.dx = 20
-            if bullet_is_ahead:
-                if self.rect.x >= 0:
-                    self.dx = -20
-            if bullet_is_above:
-                if self.rect.y <= screen_h-150:
-                    self.dy = 20
-            if bullet_is_below:
-                if self.rect.x >= 0:
-                    self.dy = -20
-            #if not move bullet slower
-        
-
-#move vertically
-        if self.direction == 1: 
             self.rect.y += self.dy
-            if self.rect.y >= screen_h- 150:
-                self.direction = 0
-                self.rect.x = 0
-                #self.rect.y = randint(0,screen_h-180)
-                self.rect.y = 400
-                rotated = True
-                bullet_isx = False
+            
+#move vertically
+        if self.direction == 1:
+            self.dx = 0
+            self.rect.y += self.dy
+            self.rect.x += self.dx
         
-            
-            
-            #check y
-            if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
-                #below player
-                if self.rect.y >= player_pos.y:
-                    bullet_is_below = True
-                    self.dy = -2
-                #above player
-                if self.rect.y <= player_pos.y:
-                    bullet_is_above = True
-                    self.dy = 2
-            #check x
-            if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
-                #ahead of player
-                if self.rect.x >= player_pos.x:
-                    bullet_is_ahead = True
-                    self.dx = -2
-                #behind player
-                if self.rect.x <= player_pos.x:
-                    bullet_is_behind = True
-                    self.dx = 2
-#print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
-                    
-            #if player is detected move bullet faster   
-            if bullet_is_ahead:
-                if self.rect.x <= screen_w:
-                    self.dx = 20
-            if bullet_is_behind:
-                if self.rect.x >= 0:
-                    self.dx = -20
-            if bullet_is_above:
-                if self.rect.y <= screen_h-150:
-                    self.dy = 20
-            if bullet_is_below:
-                if self.rect.x >= 0:
-                    self.dy = -20
-            #if not move bullet slower
-            else:
-                self.dx = 2
+#if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
 
-#rotate based on direction
+#if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
+
+#move the bullet, if it detects something, move to the end and increase the speed, when it reaches the end, spawn a new one at the top.
+        if self.detected == False:
+            pass
+    #check y
+            if (self.rect.x+tile_size//2) >= (player_pos.x) and (self.rect.x +tile_size//2)<= (player_pos.x+tile_size//2):
+                self.image = pygame.transform.rotate(self.image, -90)
+                if self.rect.y >= player_pos.y:
+#                    print('below')
+                    self.bullet_is_below = True
+                    self.bullet_is_above = False
+                    self.detected = True
+                if self.rect.y <= player_pos.y:
+#                    print('above')
+                    self.bullet_is_above = True
+                    self.bullet_is_below = False
+                    self.detected = True
+    #check x
+            if (self.rect.y+tile_size//2) >= (player_pos.y) and (self.rect.y +tile_size//2)<= (player_pos.y+tile_size//2):
+                self.image = pygame.transform.rotate(self.image, 90)
+                if self.rect.x >= player_pos.x:
+#                    print('ahead')
+                    self.bullet_is_ahead = True
+                    self.bullet_is_behind = False
+                    self.detected = True
+                if self.rect.x <= player_pos.x:
+#                    print('behind')
+                    self.bullet_is_behind = True
+                    self.bullet_is_ahead = False
+                    self.detected = True
+        
+            if self.bullet_is_behind or self.bullet_is_ahead or self.bullet_is_above or self.bullet_is_below:
+                self.detected = True
+            else:
+                self.detected = False
+
+    #if player is detected move bullet faster   
+        if self.bullet_is_behind:
+           if self.rect.x <= screen_w:
+#                print('behind2')
+                self.dx = self.fastspeed
+                self.dy = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+        if self.bullet_is_ahead:
+            if self.rect.x >= 0:
+#                print('ahead2')
+                self.dx = -self.fastspeed
+                self.dy = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+        if self.bullet_is_above:
+            if self.rect.y <= screen_h-150:
+#                print('above2')
+                self.dy = self.fastspeed
+                self.dx = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+        if self.bullet_is_below:
+            if self.rect.y >= 0:
+#                print('below2')
+                self.dy = -self.fastspeed
+                self.dx = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+
         if rotated:
             if self.direction == 0: #rotate horizontally
-                self.image = pygame.transform.rotate(self.image, 90)
+                #self.image = pygame.transform.rotate(self.image, 90)
                 rotated = False
             if self.direction == 1: #rotate vertically
-                self.image = pygame.transform.rotate(self.image, -90)
+                #self.image = pygame.transform.rotate(self.image, -90)
                 rotated = False
         
         
@@ -690,8 +716,7 @@ player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, 
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 robot_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
-bullet = Enemy1(randint(0,screen_w-30),randint(0,screen_h-180))
-bullet_group.add(bullet)
+bullet = Enemy1(20,50)
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
@@ -715,7 +740,6 @@ while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
-    
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
         if path.exists(f'level{level}_data'):
@@ -763,7 +787,9 @@ while run: #while game is running
         world_data = []
         world_loaded[0] = reset_level(level)
         gameover = 0
-
+        bullet_group.empty()
+        bullet = Enemy1(20,50)
+        bullet_group.add(bullet)
         if solo_button.draw():
             game = False
             solo = True
@@ -821,6 +847,13 @@ while run: #while game is running
                 world_loaded[0] = reset_level(level)
                 gameover = 0
                 score = 0
+                main = True
+                game = False
+                run_game = False
+                solo = False 
+                multiple = False
+                
+
                 
 #if player passes level
         if gameover == 1: #next level starts and the world is not loaded
