@@ -495,97 +495,98 @@ class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('enemy/bullet.png')
-        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size//2))
         self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
-        self.speed = 2
-        self.fastspeed = 5
-        self.rect.x = x
+        self.speed = 2 #base speed
+        self.fastspeed = 5 #increased speed
+        self.rect.x = x 
         self.rect.y = y
         self.dx = 10
         self.dy = 10
-        self.direction = 1
-        self.detected = False
-        self.bullet_is_behind = False
-        self.bullet_is_ahead = False
-        self.bullet_is_above = False
-        self.bullet_is_below = False
+        self.direction = 1 #vertical = 1, horizontal  = 0
+        self.detected = False #if the player has been detected
+        self.bullet_is_behind = False #is the bullet behind
+        self.bullet_is_ahead = False #is the bullet ahead
+        self.bullet_is_above = False #is the bullet above
+        self.bullet_is_below = False #is the bullet below
 
     def update(self):
-        pos = pygame.mouse.get_pos()
-        #self.rect.x = pos[0]
-        #self.rect.y = pos[1]
-        rotated = False
-    #reset
-        #goes outside screen - left and right
+        rotated = False #has the image been rotated
+    #reset bullet
+        #if the bullet goes outside the screen - left or right
         if self.rect.x >= screen_w-20 or self.rect.x <= 0:
-            self.image = pygame.transform.rotate(self.image, 90)
-            self.direction = 1
-            rotated = True
+            self.image = pygame.transform.rotate(self.image, 90)    #rotate image
+            self.direction = 1                                      #change direction to vertical
+                                                                    #reset bullet position variables
             self.bullet_is_ahead = False
             self.bullet_is_below = False
             self.bullet_is_behind = False
             self.bullet_is_above = False
-            self.detected = False
+            self.detected = False                                   #player has not been detected
+        #if the player went out the right side
             if self.rect.x >= screen_w-20:
-                print('out right')
+                print('went out the right side')
+                #set the bullet starting position to y = 10 and move the bullet down
                 self.rect.y = 10
                 self.rect.x = randint(50,screen_w-50)
                 self.dy = self.speed
+        #if the player went out the left side
             if self.rect.x <= 0:
-                print('out left')
+                print('went out the left side')
+                #set the bullet starting position to y = 10 and move the bullet down
                 self.rect.y = 10
                 self.rect.x = randint(50,screen_w-50)
-                self.dy = -self.speed
-        #goes outside screen - up and down
+                self.dy = self.speed
+        #if the bullet goes outside the screen - up and down
         if self.rect.y >= screen_h-180 or self.rect.y <= 0:
-            self.direction = 0
-            self.image = pygame.transform.rotate(self.image, -90)
-            rotated = True
+            self.image = pygame.transform.rotate(self.image, -90)   #rotate image
+            self.direction = 0                                      #change direction to horizontal
+                                                                    #reset bullet position variables
             self.bullet_is_ahead = False
             self.bullet_is_below = False
             self.bullet_is_behind = False
             self.bullet_is_above = False
-            self.detected = False
+            self.detected = False                                   #player has not been detected
+        #if the player went out the from the bottom side
             if self.rect.y >= screen_h-180:
-                print('out down')
+                print('went out the bottom')
+                #set the bullet starting position to x = end of the screen and move the bullet backward
                 self.rect.y = randint(50,screen_h-200)
                 self.rect.x = screen_w-20
                 self.dx = -self.speed
+         #if the player went out the from the top
             if self.rect.y <= 0:
-                print('out up')
+                print('went out the top')
+                #set the bullet starting position to x = 10 and move the bullet forward
                 self.rect.y = randint(50,screen_h-200)
                 self.rect.x = 10
                 self.dx = self.speed
-        if pygame.key.get_pressed()[pygame.K_y]:
-            pass
-    #move horizontally
+    #if moving horizontally
         if self.direction == 0:
             self.dy = 0
             self.rect.x += self.dx
             self.rect.y += self.dy
             
-#move vertically
+    #if moving vertically
         if self.direction == 1:
             self.dx = 0
             self.rect.y += self.dy
             self.rect.x += self.dx
-        
-#if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
 
-#if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
-
-#move the bullet, if it detects something, move to the end and increase the speed, when it reaches the end, spawn a new one at the top.
+#if the player has not been detected
         if self.detected == False:
-            pass
     #check y
             if (self.rect.x+tile_size//2) >= (player_pos.x) and (self.rect.x +tile_size//2)<= (player_pos.x+tile_size//2):
+                #rotate image
                 self.image = pygame.transform.rotate(self.image, -90)
+                #if the bullet's y is greater than the player's y
                 if self.rect.y >= player_pos.y:
 #                    print('below')
                     self.bullet_is_below = True
                     self.bullet_is_above = False
                     self.detected = True
+                #if the bullet's y is less than the player's y
                 if self.rect.y <= player_pos.y:
 #                    print('above')
                     self.bullet_is_above = True
@@ -594,21 +595,20 @@ class Enemy1(pygame.sprite.Sprite):
     #check x
             if (self.rect.y+tile_size//2) >= (player_pos.y) and (self.rect.y +tile_size//2)<= (player_pos.y+tile_size//2):
                 self.image = pygame.transform.rotate(self.image, 90)
+                #if the bullet's x is greater than the player's x
                 if self.rect.x >= player_pos.x:
 #                    print('ahead')
                     self.bullet_is_ahead = True
                     self.bullet_is_behind = False
                     self.detected = True
+                #if the bullet's x is greater than the player's x
                 if self.rect.x <= player_pos.x:
 #                    print('behind')
                     self.bullet_is_behind = True
                     self.bullet_is_ahead = False
                     self.detected = True
         
-            if self.bullet_is_behind or self.bullet_is_ahead or self.bullet_is_above or self.bullet_is_below:
-                self.detected = True
-            else:
-                self.detected = False
+            
 
     #if player is detected move bullet faster   
         if self.bullet_is_behind:
@@ -787,6 +787,7 @@ while run: #while game is running
         world_data = []
         world_loaded[0] = reset_level(level)
         gameover = 0
+        #delete and create bullet for level 1
         bullet_group.empty()
         bullet = Enemy1(20,50)
         bullet_group.add(bullet)
