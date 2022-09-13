@@ -46,7 +46,7 @@ font = pygame.font.SysFont('Arial', 70)
 
 #variables
 tile_size = 24
-gameover = 0
+gameover = -1
 main = True
 level = 1
 max_levels = 3
@@ -247,7 +247,7 @@ class Buttons():
             if pygame.mouse.get_pressed()[0] == 1:
                 action = True
                 self.clicked = True
-        if key[self.button] and self.tag == button_options_main[current_selection]:
+        if key[self.button] and self.tag == button_options[current_selection]:
             action = True
             self.clicked = True
 
@@ -739,9 +739,15 @@ solo = False
 game = False
 run_game = False
 
+button_selected_start = False
+button_selected_option = False
+button_selected_exit = False
+button_selected_solo = False
+button_selected_multi = False
+button_selected_back = False
+button_selected_restart = False
 current_selection = 3
-button_options_main = {0: "start" , 1: "options", 2: "exit" }
-button_options_game = {0: "solo" ,1:  "multi", 2: "back"}
+button_options = {1: "exit" , 2: "options", 3: "start",4:" ", 5:"solo", 6:"multi", 7:"back", 8:" ",  9: "restart", 10: " " }
 
 while run: #while game is running
     clock.tick(fps)
@@ -779,36 +785,98 @@ while run: #while game is running
     if pygame.key.get_pressed()[pygame.K_5]:
         theme = 1
         loaded = False
-#if the current scene is the main menu
-    if current_selection <= 0:
-        current_selection = 3
-    if current_selection >= 3:
-        current_selection = 0
-    print(str(button_options_main[current_selection]))
+
+#used for selecting with keyboard
+    #if currently selected is 1, button is exit and so on....
+    if current_selection == 1:
+        button_selected_exit = True
+    else:
+        button_selected_exit = False
+
+    if current_selection == 2:
+        button_selected_option = True
+    else:
+        button_selected_option = False
+
+    if current_selection== 3 :
+        button_selected_start = True
+    else:
+        button_selected_start = False
+
+    if current_selection == 5:
+        button_selected_solo = True
+    else:
+        button_selected_solo = False
+
+    if current_selection == 6:
+        button_selected_multi = True
+    else:
+        button_selected_multi = False
+
+    if current_selection== 7:
+        button_selected_back = True
+    else:
+        button_selected_back = False
+
+    if current_selection== 9:
+        button_selected_restart = True
+    else:
+        button_selected_restart = False
+
+#if layer is on the satrtup screen
     if main:
-#draw and exit and start button, when pressed exit, exits the game and start, stop the menu scene and start games scene
+        #if the button is currently selected, draw its border
+        if button_selected_start:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 130, screen_h //2-20, 320, 160))
+        
+        if button_selected_exit:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 370, screen_h //2-20, 280, 160))
+        #allows the selection to loop from left to right or right to left
+        if current_selection <= 0: #blank
+            current_selection = 3 #start
+        #if the player is past 4 go to 1, if the player just restarted go to 1
+        if current_selection >= 4 and current_selection <= 6 or current_selection >= 10: #ahead of blank and less than multi or greater than blank
+            current_selection = 1#exit
+#draw exit and start buttons, when pressed exit, exits the game and start, stop the menu scene and start games scene
         if exit_button.draw():
             run = False
+        
         if start_button.draw():
             main = False
             game = True 
+            current_selection = 4
+#if player is on the gamemode selection screen
     if game:
+        #if the button is currently selected, draw its border
+        if button_selected_multi:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 -360, screen_h //2-20, 150, 160))
+        if button_selected_solo:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 130, screen_h //2-20, 160, 160))
+
+        #allows the selection to loop from left to right or right to left
+        if current_selection <= 4: #blank
+            current_selection = 7 #back
+        if current_selection >= 8: #blank
+            current_selection = 5 #solo
         #reset game variables
         level = 1
         score = 0
         world_data = []
         world_loaded[0] = reset_level(level)
-        gameover = 0
         #delete and create bullet for level 1
         bullet_group.empty()
         bullet = Enemy1(20,50)
         bullet_group.add(bullet)
+
         if solo_button.draw():
             game = False
             solo = True
+            gameover = 0
+
         if multi_button.draw():
             game = False
             multiple = True
+            gameover = 0
 
         if multiple:
             multi().host_game('localhost', 9999)
@@ -856,10 +924,12 @@ while run: #while game is running
 #        gameover = player2.update(gameover)
 #if player dies
         if gameover == -1:
+            current_selection = 9 #blank
+            if button_selected_restart:
+                pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 60, screen_h //2 + 90, 140, 60))
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
                 world_data = []
                 world_loaded[0] = reset_level(level)
-                gameover = 0
                 score = 0
                 main = True
                 game = False
@@ -873,6 +943,7 @@ while run: #while game is running
         if gameover == 1: #next level starts and the world is not loaded
             level += 1 
             loaded = False
+            
             if level <= max_levels: #when level number is lower than total levels, resets levels
                 world_data = []
                 world_loaded[0] = reset_level(level)
@@ -881,22 +952,29 @@ while run: #while game is running
             else: #if player finishes last level, display text and reset game
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
                 #restart game
+                current_selection = 9 #blank
+                if button_selected_restart:
+                    pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 50, screen_h //2 + 100, 160, 50))
                 if restart_button.draw():
-                    
                     main = True
                     game = False
                     run_game = False
                     solo = False 
                     multiple = False
 
+    print(str(button_options[current_selection]))
+    print(gameover)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if event.type == pygame.KEYDOWN:
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
-                current_selection -=1
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                current_selection +=1
+        #if game is not being played, allow user to select buttons
+        if gameover != 0:
+            if event.type == pygame.KEYDOWN:
+                if pygame.key.get_pressed()[pygame.K_LEFT]:
+                    current_selection -=1
+                if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                    current_selection +=1
+
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
 
