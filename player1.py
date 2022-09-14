@@ -334,6 +334,7 @@ class Player():
             #check x
                 if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                     dx = 0
+                    print('side')
             #stop player from moving off screen
                 if player_pos.x <= 0: 
                     dx = 1
@@ -344,6 +345,7 @@ class Player():
                 if player_pos.y <= 0 or player_pos.y >= screen_h: #stop player from moving off screen
                     dy = 1
                 if tile[1].colliderect(player_pos.x, player_pos.y + dy,self.width, self.height ):#if player collides with walking blocks
+                    print('floor')
                     #check if below ground
                     if self.vel_y < 0:
                         dy = tile[1].bottom - self.rect.top
@@ -355,20 +357,20 @@ class Player():
                         self.in_air = False
 
 #enemy
-#robot
+            #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
                 gameover = -1
                 #gameover_fx.play()
-#bullet
+            #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
                 gameover = -1
-#fall to death
+            #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
             
 #ladders
             for platform in platform_group:
-#when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
                 if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                     self.image = climb_img
                     #climb
@@ -532,14 +534,14 @@ class Enemy1(pygame.sprite.Sprite):
             self.detected = False                                   #player has not been detected
         #if the player went out the right side
             if self.rect.x >= screen_w-20:
-                print('went out the right side')
+                #print('went out the right side')
                 #set the bullet starting position to y = 10 and move the bullet down
                 self.rect.y = 10
                 self.rect.x = randint(50,screen_w-50)
                 self.dy = self.speed
         #if the player went out the left side
             if self.rect.x <= 0:
-                print('went out the left side')
+                #print('went out the left side')
                 #set the bullet starting position to y = 10 and move the bullet down
                 self.rect.y = 10
                 self.rect.x = randint(50,screen_w-50)
@@ -556,14 +558,14 @@ class Enemy1(pygame.sprite.Sprite):
             self.detected = False                                   #player has not been detected
         #if the player went out the from the bottom side
             if self.rect.y >= screen_h-180:
-                print('went out the bottom')
+                #print('went out the bottom')
                 #set the bullet starting position to x = end of the screen and move the bullet backward
                 self.rect.y = randint(50,screen_h-200)
                 self.rect.x = screen_w-20
                 self.dx = -self.speed
          #if the player went out the from the top
             if self.rect.y <= 0:
-                print('went out the top')
+                #print('went out the top')
                 #set the bullet starting position to x = 10 and move the bullet forward
                 self.rect.y = randint(50,screen_h-200)
                 self.rect.x = 10
@@ -665,13 +667,69 @@ class Enemy2(pygame.sprite.Sprite):
         self.rect.y = y
         self.movedirection = 1
         self.movecounter = 0
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.vel_y = 0
+        self.in_air = True
 
     def update(self):
-        self.rect.x += self.movedirection
-        self.movecounter += 1
-        if abs(self.movecounter) > 50:
-            self.movedirection *= -1
-            self.movecounter *= -1
+        dx = 2
+        dy = 0
+
+        #grav
+        self.vel_y += 1 #always falling down - how fast you fall down
+        if self.vel_y > 10: #max fall speed
+            self.vel_y = 10
+        dy += self.vel_y #fall down
+
+        #check collision
+        self.in_air = True #if player is in air - falling or jumping
+        for tile in world_loaded[0].tile_list:
+        #check x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
+                dx = 0
+        #stop player from moving off screen
+            if self.rect.x <= 0: 
+                dx = 1
+            if self.rect.x >= screen_w - tile_size:
+                self.rect.x = screen_w - tile_size
+
+        #check y
+            if self.rect.y <= 0 or self.rect.y >= screen_h: #stop player from moving off screen
+                dy = 1
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
+                if self.rect.x >= screen_w - 20:
+                    self.rect.x += dx
+                elif self.rect.x <= 20:
+                    self.rect.x -= dx
+                    
+                #check if below ground
+                if self.vel_y < 0:
+                    dy = tile[1].bottom - self.rect.top
+                    self.vel_y = 0
+                #check if above ground
+                elif self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+                    self.vel_y = 0
+                    self.in_air = False
+        
+#ladders
+        for platform in platform_group:
+            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                #climb
+                dy = 0
+                
+
+#move the player
+        self.rect.x += dx
+        self.rect.y += dy
+        
+        screen.blit(self.image, self.rect)
+        
+        #if abs(self.movecounter) > 50:
+        #    self.movedirection *= -1
+        #    self.movecounter *= -1
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -859,7 +917,7 @@ while run: #while game is running
         if current_selection >= 8: #blank
             current_selection = 5 #solo
         #reset game variables
-        level = 1
+        level = 2
         score = 0
         world_data = []
         world_loaded[0] = reset_level(level)
@@ -906,9 +964,8 @@ while run: #while game is running
                 robot_group.draw(screen)
             if level == 3:
                 enemy = Enemy2(240,40)
-                enemy.enemy3()
+                
 #update score
-            print(len(coin_group))
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
                 if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
@@ -954,7 +1011,7 @@ while run: #while game is running
                 #restart game
                 current_selection = 9 #blank
                 if button_selected_restart:
-                    pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 50, screen_h //2 + 100, 160, 50))
+                    pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 60, screen_h //2 + 90, 140, 60))
                 if restart_button.draw():
                     main = True
                     game = False
@@ -962,8 +1019,6 @@ while run: #while game is running
                     solo = False 
                     multiple = False
 
-    print(str(button_options[current_selection]))
-    print(gameover)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
