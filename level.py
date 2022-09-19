@@ -105,6 +105,11 @@ def draw_world():
 					#exit
 					img = pygame.transform.scale(exit_img, (tile_size, int(cols * 1.5)))
 					screen.blit(img, (col * tile_size, row * cols - (cols // 2)))
+				if world_data[row][col] == 9:
+					#no space
+					img = pygame.transform.scale(robot_img, (tile_size, int(cols * 1.5)))
+					img = pygame.transform.flip(img, False, True)
+					screen.blit(img, (col * tile_size, row * cols - (cols // 2)))
 
 class Button():
 	def __init__(self, x, y, image):
@@ -188,12 +193,12 @@ while run:
 				#update tile value
 				if pygame.mouse.get_pressed()[0] == 1:
 					world_data[y][x] += 1
-					if world_data[y][x] > 8:
+					if world_data[y][x] > 9:
 						world_data[y][x] = 0
 				elif pygame.mouse.get_pressed()[2] == 1:
 					world_data[y][x] -= 1
 					if world_data[y][x] < 0:
-						world_data[y][x] = 8
+						world_data[y][x] = 9
 		if event.type == pygame.MOUSEBUTTONUP:
 			clicked = False
 		#up and down key presses to change level number

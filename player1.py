@@ -490,6 +490,9 @@ class World():
                 if tile == 8:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
                     #exit_group.add(exit)
+                if tile == 9: #end
+                    end = End(col_count * tile_size, row_count * tile_size)
+                    end_group.add(end)
                 col_count +=1
             row_count +=1
 
@@ -670,39 +673,18 @@ class Enemy2(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.vel_y = 0
         self.in_air = True
-        self.i = 0
-        self.touch = False
 
     def update(self):
         dx = 2
         dy = 0
-        pos = pygame.mouse.get_pos()
-        #self.rect.x = pos[0]
-        #self.rect.y = pos[1]
-
         #grav
         self.vel_y += 1 #always falling down - how fast you fall down
         if self.vel_y > 10: #max fall speed
             self.vel_y = 10
         dy += self.vel_y #fall down
+
         #check collision
-        self.in_air = True #if player is in air - falling or jumping
         for tile in world_loaded[0].tile_list:
-            
-            if self.rect.y+25 >= tile[1].y and self.rect.y +35 <= tile[1].y+40 and self.rect.x+10 >= tile[1].x and self.rect.x+10 <= tile[1].x+40:
-                self.touch = True
-                #print(tile[1].x)
-                print('floor')
-            ####################################################
-            #else breaks the code - need to rewrite/rethink the else statement
-            else:
-                self.touch = False
-            if not self.touch:
-                self.i += 1
-                print('no floor' + str(self.i))
-                #print(str(self.rect.x) +","+ str(self.rect.y))
-            pygame.draw.rect(screen, (255), (self.rect.x, self.rect.y+25, self.width,10))
-            #print(touch)
         #check x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                 dx = 0
@@ -716,11 +698,6 @@ class Enemy2(pygame.sprite.Sprite):
             if self.rect.y <= 0 or self.rect.y >= screen_h: #stop player from moving off screen
                 dy = 1
             if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
-                if self.rect.x >= screen_w - 20:
-                    self.rect.x += dx
-                elif self.rect.x <= 20:
-                    self.rect.x -= dx
-                    
                 #check if below ground
                 if self.vel_y < 0:
                     dy = tile[1].bottom - self.rect.top
@@ -731,14 +708,16 @@ class Enemy2(pygame.sprite.Sprite):
                     self.vel_y = 0
                     self.in_air = False
             
-        
 #ladders
-        for platform in platform_group:
-            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
-            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                #climb
-                dy = 0
-                
+            for platform in platform_group:
+                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+                if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                    print('ladder')
+            for end in end_group:
+                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+                if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                    print('no floor')
+                    dx = -2
 
 #move the player
         self.rect.x += dx
@@ -790,6 +769,16 @@ class Exit(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+class End(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        img = pygame.image.load('restart_btn.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size //2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.climb = True
+
 world_data = []
 key = pygame.key.get_pressed()
 player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
@@ -799,6 +788,7 @@ bullet_group = pygame.sprite.Group()
 bullet = Enemy1(20,50)
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
+end_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
 #exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
@@ -981,6 +971,7 @@ while run: #while game is running
             if level == 2:
                 robot_group.update()
                 robot_group.draw(screen)
+                end_group.draw(screen)
             if level == 3:
                 enemy = Enemy2(240,40)
                 
