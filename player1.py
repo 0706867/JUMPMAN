@@ -522,7 +522,6 @@ class Enemy1(pygame.sprite.Sprite):
         self.bullet_is_below = False #is the bullet below
 
     def update(self):
-        rotated = False #has the image been rotated
     #reset bullet
         #if the bullet goes outside the screen - left or right
         if self.rect.x >= screen_w-20 or self.rect.x <= 0:
@@ -673,25 +672,28 @@ class Enemy2(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.vel_y = 0
         self.in_air = True
+        self.climb = randint(1,2)
 
     def update(self):
         dx = 2
         dy = 0
+#        self.rect.x = pygame.mouse.get_pos() [0]
+#        self.rect.y = pygame.mouse.get_pos() [1]
         #grav
         self.vel_y += 1 #always falling down - how fast you fall down
         if self.vel_y > 10: #max fall speed
             self.vel_y = 10
         dy += self.vel_y #fall down
-
         #check collision
-        self.in_air = True #if player is in air - falling or jumping
         for tile in world_loaded[0].tile_list:
         #check x
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
-                dx = 0
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with the side of walking blocks
+                #self.movedirection = 0
+                print('side')
+                pass
         #stop player from moving off screen
             if self.rect.x <= 0: 
-                dx = 1
+                self.movedirection = 1
             if self.rect.x >= screen_w - tile_size:
                 self.rect.x = screen_w - tile_size
 
@@ -700,9 +702,9 @@ class Enemy2(pygame.sprite.Sprite):
                 dy = 1
             if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
                 if self.rect.x >= screen_w - 20:
-                    self.rect.x += dx
+                    self.rect.x += self.movedirection
                 elif self.rect.x <= 20:
-                    self.rect.x -= dx
+                    self.rect.x -= self.movedirection
                     
                 #check if below ground
                 if self.vel_y < 0:
@@ -716,22 +718,32 @@ class Enemy2(pygame.sprite.Sprite):
         
 #ladders
         for platform in platform_group:
-            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
-            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                #climb
+            #when colliding with the ladders, robot decides to move up or not based on a random int
+            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
+                print('ladder')
                 dy = 0
-                
-                
+                self.climb = randint(1,2)
+                if self.climb == 1:
+                    print('1')
+                    dy -= 20
+                if self.climb == 2:
+                    print('2')
+#            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
+#                dy += 20
+#                print('below')
+            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
+            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
+                 
         for end in end_group:
-            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+            #when colliding with end blocks, robot moves backwards respective to its direciton
             if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                 print('no floor')
-                dx *= -1
-                
-#move the player
-        self.rect.x += dx
-        self.rect.y += dy
+                self.movedirection *= -1
         
+        #move the player
+        self.rect.x += self.movedirection
+        self.rect.y += dy
+
         screen.blit(self.image, self.rect)
         
         #if abs(self.movecounter) > 50:
@@ -781,7 +793,7 @@ class Exit(pygame.sprite.Sprite):
 class End(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        img = pygame.image.load('restart_btn.png')
+        img = pygame.image.load('bg.png')
         self.image = pygame.transform.scale(img, (tile_size, tile_size //2))
         self.rect = self.image.get_rect()
         self.rect.x = x
