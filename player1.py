@@ -684,6 +684,7 @@ class Enemy2(pygame.sprite.Sprite):
         dy += self.vel_y #fall down
 
         #check collision
+        self.in_air = True #if player is in air - falling or jumping
         for tile in world_loaded[0].tile_list:
         #check x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
@@ -698,6 +699,11 @@ class Enemy2(pygame.sprite.Sprite):
             if self.rect.y <= 0 or self.rect.y >= screen_h: #stop player from moving off screen
                 dy = 1
             if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
+                if self.rect.x >= screen_w - 20:
+                    self.rect.x += dx
+                elif self.rect.x <= 20:
+                    self.rect.x -= dx
+                    
                 #check if below ground
                 if self.vel_y < 0:
                     dy = tile[1].bottom - self.rect.top
@@ -707,18 +713,21 @@ class Enemy2(pygame.sprite.Sprite):
                     dy = tile[1].top - self.rect.bottom
                     self.vel_y = 0
                     self.in_air = False
-            
+        
 #ladders
-            for platform in platform_group:
-                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
-                if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                    print('ladder')
-            for end in end_group:
-                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
-                if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                    print('no floor')
-                    dx = -2
-
+        for platform in platform_group:
+            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                #climb
+                dy = 0
+                
+                
+        for end in end_group:
+            #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+            if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                print('no floor')
+                dx *= -1
+                
 #move the player
         self.rect.x += dx
         self.rect.y += dy
