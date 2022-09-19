@@ -334,7 +334,6 @@ class Player():
             #check x
                 if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                     dx = 0
-                    print('side')
             #stop player from moving off screen
                 if player_pos.x <= 0: 
                     dx = 1
@@ -345,7 +344,6 @@ class Player():
                 if player_pos.y <= 0 or player_pos.y >= screen_h: #stop player from moving off screen
                     dy = 1
                 if tile[1].colliderect(player_pos.x, player_pos.y + dy,self.width, self.height ):#if player collides with walking blocks
-                    print('floor')
                     #check if below ground
                     if self.vel_y < 0:
                         dy = tile[1].bottom - self.rect.top
@@ -359,7 +357,8 @@ class Player():
 #enemy
             #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
-                gameover = -1
+                pass
+#                gameover = -1
                 #gameover_fx.play()
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
@@ -671,20 +670,39 @@ class Enemy2(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.vel_y = 0
         self.in_air = True
+        self.i = 0
+        self.touch = False
 
     def update(self):
         dx = 2
         dy = 0
+        pos = pygame.mouse.get_pos()
+        #self.rect.x = pos[0]
+        #self.rect.y = pos[1]
 
         #grav
         self.vel_y += 1 #always falling down - how fast you fall down
         if self.vel_y > 10: #max fall speed
             self.vel_y = 10
         dy += self.vel_y #fall down
-
         #check collision
         self.in_air = True #if player is in air - falling or jumping
         for tile in world_loaded[0].tile_list:
+            
+            if self.rect.y+25 >= tile[1].y and self.rect.y +35 <= tile[1].y+40 and self.rect.x+10 >= tile[1].x and self.rect.x+10 <= tile[1].x+40:
+                self.touch = True
+                #print(tile[1].x)
+                print('floor')
+            ####################################################
+            #else breaks the code - need to rewrite/rethink the else statement
+            else:
+                self.touch = False
+            if not self.touch:
+                self.i += 1
+                print('no floor' + str(self.i))
+                #print(str(self.rect.x) +","+ str(self.rect.y))
+            pygame.draw.rect(screen, (255), (self.rect.x, self.rect.y+25, self.width,10))
+            #print(touch)
         #check x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with walking blocks,stop moving
                 dx = 0
@@ -712,6 +730,7 @@ class Enemy2(pygame.sprite.Sprite):
                     dy = tile[1].top - self.rect.bottom
                     self.vel_y = 0
                     self.in_air = False
+            
         
 #ladders
         for platform in platform_group:
