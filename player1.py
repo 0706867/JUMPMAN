@@ -51,6 +51,7 @@ main = True
 level = 1
 max_levels = 3
 score = 0
+enemy_score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
@@ -222,7 +223,7 @@ class multi():
                     player2 = Player2(datasx,datasy)
                     player2.update()
                     if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
-                        score += 1      
+                        enemy_score += 1      
                         if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                             gameover = 1  
         client.close()
@@ -362,6 +363,9 @@ class Player():
                 #gameover_fx.play()
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
+                gameover = -1
+            #bomb
+            if pygame.sprite.spritecollide(self, bomb_group, False):
                 gameover = -1
             #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
@@ -677,8 +681,7 @@ class Enemy2(pygame.sprite.Sprite):
     def update(self):
         dx = 2
         dy = 0
-#        self.rect.x = pygame.mouse.get_pos() [0]
-#        self.rect.y = pygame.mouse.get_pos() [1]
+        #self.rect.center = pygame.mouse.get_pos()
         #grav
         self.vel_y += 1 #always falling down - how fast you fall down
         if self.vel_y > 10: #max fall speed
@@ -717,22 +720,23 @@ class Enemy2(pygame.sprite.Sprite):
                     self.in_air = False
         
 #ladders
-        for platform in platform_group:
-            #when colliding with the ladders, robot decides to move up or not based on a random int
-            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
-                print('ladder')
-                dy = 0
-                self.climb = randint(1,2)
-                if self.climb == 1:
-                    print('1')
-                    dy -= 20
-                if self.climb == 2:
-                    print('2')
+#        for platform in platform_group:
+#            #when colliding with the ladders, robot decides to move up or not based on a random int
+#            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
+#                print('ladder')
+#                dy = 0
+#                self.climb = randint(1,2)
+#                if self.climb == 1:
+#                    print('1')
+#                    dy -= 20
+#                if self.climb == 2:
+#                    print('2')
+
 #            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
 #                dy += 20
 #                print('below')
-            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
-            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
+#            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
+#            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
                  
         for end in end_group:
             #when colliding with end blocks, robot moves backwards respective to its direciton
@@ -746,9 +750,38 @@ class Enemy2(pygame.sprite.Sprite):
 
         screen.blit(self.image, self.rect)
         
-        #if abs(self.movecounter) > 50:
-        #    self.movedirection *= -1
-        #    self.movecounter *= -1
+    #if abs(self.movecounter) > 50:
+    #    self.movedirection *= -1
+    #    self.movecounter *= -1
+
+#bombs
+class Enemy3(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('enemy/bullet.png')
+        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.rect = self.image.get_rect()
+        self.speed = 5 #base speed
+        self.rect.x = x 
+        self.rect.y = y
+
+    def update(self):
+    #move down
+        self.rect.y += self.speed
+        if self.rect.y >= 450:
+            print('ground')
+            self.rect.y =0
+            self.rect.x = randint(40,920)
+            self.speed = 5
+        if self.rect.y >= 400:
+            self.image = pygame.image.load('enemy/enemy_death.png')
+            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+            self.speed = 1
+        else:   
+            self.image = pygame.image.load('enemy/bullet.png')
+            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+
+
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -806,7 +839,9 @@ player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, 
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 robot_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
+bomb_group = pygame.sprite.Group()
 bullet = Enemy1(20,50)
+bomb = Enemy3(20,50)
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
 end_group = pygame.sprite.Group()
@@ -947,14 +982,18 @@ while run: #while game is running
         if current_selection >= 8: #blank
             current_selection = 5 #solo
         #reset game variables
-        level = 2
+        level = 3
         score = 0
+        enemy_score = 0
         world_data = []
         world_loaded[0] = reset_level(level)
         #delete and create bullet for level 1
         bullet_group.empty()
         bullet = Enemy1(20,50)
         bullet_group.add(bullet)
+        bomb_group.empty()
+        bomb = Enemy3(20,50)
+        bomb_group.add(bomb)
 
         if solo_button.draw():
             game = False
@@ -994,7 +1033,8 @@ while run: #while game is running
                 robot_group.draw(screen)
                 end_group.draw(screen)
             if level == 3:
-                enemy = Enemy2(240,40)
+                bomb_group.update()
+                bomb_group.draw(screen)
                 
 #update score
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
@@ -1005,6 +1045,7 @@ while run: #while game is running
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
+            draw_text('Enemy Score: ' + str(enemy_score), font_score, white, tile_size + 450, screen_h - 50)
 
 
         #blob_group.draw(screen)
@@ -1019,6 +1060,7 @@ while run: #while game is running
                 world_data = []
                 world_loaded[0] = reset_level(level)
                 score = 0
+                enemy_score = 0
                 main = True
                 game = False
                 run_game = False

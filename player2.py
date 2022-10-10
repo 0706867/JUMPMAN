@@ -46,11 +46,12 @@ font = pygame.font.SysFont('Arial', 70)
 
 #variables
 tile_size = 24
-gameover = 0
+gameover = -1
 main = True
 level = 1
 max_levels = 3
 score = 0
+enemy_score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
@@ -222,7 +223,7 @@ class multi():
                     player2 = Player2(datasx,datasy)
                     player2.update()
                     if pygame.sprite.spritecollide(player2, coin_group, True): #if player collides with coin, score goes up
-                        score += 1      
+                        enemy_score += 1      
                         if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
                             gameover = 1  
         client.close()
@@ -230,20 +231,26 @@ class multi():
 
 
 class Buttons():
-    def __init__(self, x, y, image):
+    def __init__(self, x, y, image, button, tag):
         self.image = image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.clicked = False
+        self.button = button
+        self.tag = tag
 
     def draw(self):
+        key = pygame.key.get_pressed()
         action = False
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
             if pygame.mouse.get_pressed()[0] == 1:
                 action = True
                 self.clicked = True
+        if key[self.button] and self.tag == button_options[current_selection]:
+            action = True
+            self.clicked = True
 
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
@@ -349,17 +356,24 @@ class Player():
                         self.in_air = False
 
 #enemy
-#robot
+            #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
-                gameover = -1
+                pass
+#                gameover = -1
                 #gameover_fx.play()
-#fall to death
+            #bullet
+            if pygame.sprite.spritecollide(self, bullet_group, False):
+                gameover = -1
+            #bomb
+            if pygame.sprite.spritecollide(self, bomb_group, False):
+                gameover = -1
+            #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
             
 #ladders
             for platform in platform_group:
-#when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
+                #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
                 if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                     self.image = climb_img
                     #climb
@@ -480,6 +494,9 @@ class World():
                 if tile == 8:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
                     #exit_group.add(exit)
+                if tile == 9: #end
+                    end = End(col_count * tile_size, row_count * tile_size)
+                    end_group.add(end)
                 col_count +=1
             row_count +=1
 
@@ -492,71 +509,157 @@ class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('enemy/bullet.png')
-        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size//2))
         self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
-        self.rect.x = x
+        self.speed = 2 #base speed
+        self.fastspeed = 5 #increased speed
+        self.rect.x = x 
         self.rect.y = y
         self.dx = 10
         self.dy = 10
-        self.direction = 1
+        self.direction = 1 #vertical = 1, horizontal  = 0
+        self.detected = False #if the player has been detected
+        self.bullet_is_behind = False #is the bullet behind
+        self.bullet_is_ahead = False #is the bullet ahead
+        self.bullet_is_above = False #is the bullet above
+        self.bullet_is_below = False #is the bullet below
 
     def update(self):
-        rotated = False
-        player_detectedy = False
-        player_detectedx = False
-        detected = False
-        if self.direction == 0: #move horizontally
+    #reset bullet
+        #if the bullet goes outside the screen - left or right
+        if self.rect.x >= screen_w-20 or self.rect.x <= 0:
+            self.image = pygame.transform.rotate(self.image, 90)    #rotate image
+            self.direction = 1                                      #change direction to vertical
+                                                                    #reset bullet position variables
+            self.bullet_is_ahead = False
+            self.bullet_is_below = False
+            self.bullet_is_behind = False
+            self.bullet_is_above = False
+            self.detected = False                                   #player has not been detected
+        #if the player went out the right side
+            if self.rect.x >= screen_w-20:
+                #print('went out the right side')
+                #set the bullet starting position to y = 10 and move the bullet down
+                self.rect.y = 10
+                self.rect.x = randint(50,screen_w-50)
+                self.dy = self.speed
+        #if the player went out the left side
+            if self.rect.x <= 0:
+                #print('went out the left side')
+                #set the bullet starting position to y = 10 and move the bullet down
+                self.rect.y = 10
+                self.rect.x = randint(50,screen_w-50)
+                self.dy = self.speed
+        #if the bullet goes outside the screen - up and down
+        if self.rect.y >= screen_h-180 or self.rect.y <= 0:
+            self.image = pygame.transform.rotate(self.image, -90)   #rotate image
+            self.direction = 0                                      #change direction to horizontal
+                                                                    #reset bullet position variables
+            self.bullet_is_ahead = False
+            self.bullet_is_below = False
+            self.bullet_is_behind = False
+            self.bullet_is_above = False
+            self.detected = False                                   #player has not been detected
+        #if the player went out the from the bottom side
+            if self.rect.y >= screen_h-180:
+                #print('went out the bottom')
+                #set the bullet starting position to x = end of the screen and move the bullet backward
+                self.rect.y = randint(50,screen_h-200)
+                self.rect.x = screen_w-20
+                self.dx = -self.speed
+         #if the player went out the from the top
+            if self.rect.y <= 0:
+                #print('went out the top')
+                #set the bullet starting position to x = 10 and move the bullet forward
+                self.rect.y = randint(50,screen_h-200)
+                self.rect.x = 10
+                self.dx = self.speed
+    #if moving horizontally
+        if self.direction == 0:
+            self.dy = 0
             self.rect.x += self.dx
-            if self.rect.x >= screen_w:
-                self.direction = 1
-                self.rect.y = 0
-                self.rect.x = randint(0,screen_w-30)
-                rotated = True
-            if self.rect.x <= player_pos.x:
-                while not detected:
-                    if self.rect.y+tile_size >= player_pos.y and self.rect.y +tile_size<= player_pos.y+tile_size:
-                        player_detectedy = True
-                        detected = True
-                        print("selfy: " + str(self.rect.y) +"playery: " + str(player_pos.y))
-            if player_detectedy:
-                if self.rect.x <= screen_w:
-                    self.dx = 20
-            else:
-                self.dx = 2
-        
-        if self.direction == 1: #move vertically
             self.rect.y += self.dy
-            if self.rect.y >= screen_h- 150:
-                self.direction = 0
-                self.rect.x = 0
-                #self.rect.y = randint(0,screen_h-180)
-                self.rect.y = 400
-                rotated = True
-                
             
-            
-            if self.rect.y <= player_pos.y:
-                #while detected == False:
-                if self.rect.x+tile_size >= player_pos.x and self.rect.x +tile_size<= player_pos.x+tile_size:
-                    player_detectedx = True
-                    print("selfy: " + str(self.rect.x) +"playery: " + str(player_pos.x))
-            if player_detectedx:
-                self.dy = 20
-            else:
-                self.dy = 2
+    #if moving vertically
+        if self.direction == 1:
+            self.dx = 0
+            self.rect.y += self.dy
+            self.rect.x += self.dx
 
-#rotate based on direction
-        if rotated:
-            if self.direction == 0: #rotate horizontally
-                self.image = pygame.transform.rotate(self.image, 90)
-                rotated = False
-            if self.direction == 1: #rotate vertically
+#if the player has not been detected
+        if self.detected == False:
+    #check y
+            if (self.rect.x+tile_size//2) >= (player_pos.x) and (self.rect.x +tile_size//2)<= (player_pos.x+tile_size//2):
+                #rotate image
                 self.image = pygame.transform.rotate(self.image, -90)
-                rotated = False
-        
-        
-        
+                #if the bullet's y is greater than the player's y
+                if self.rect.y >= player_pos.y:
+#                    print('below')
+                    self.bullet_is_below = True
+                    self.bullet_is_above = False
+                    self.detected = True
+                #if the bullet's y is less than the player's y
+                if self.rect.y <= player_pos.y:
+#                    print('above')
+                    self.bullet_is_above = True
+                    self.bullet_is_below = False
+                    self.detected = True
+    #check x
+            if (self.rect.y+tile_size//2) >= (player_pos.y) and (self.rect.y +tile_size//2)<= (player_pos.y+tile_size//2):
+                self.image = pygame.transform.rotate(self.image, 90)
+                #if the bullet's x is greater than the player's x
+                if self.rect.x >= player_pos.x:
+#                    print('ahead')
+                    self.bullet_is_ahead = True
+                    self.bullet_is_behind = False
+                    self.detected = True
+                #if the bullet's x is greater than the player's x
+                if self.rect.x <= player_pos.x:
+#                    print('behind')
+                    self.bullet_is_behind = True
+                    self.bullet_is_ahead = False
+                    self.detected = True
+
+    #if player is detected move bullet faster   
+        #if the bullet is behind the player
+        if self.bullet_is_behind:
+            #if the bullet's x is less than the end of the screen increase the speed
+           if self.rect.x <= screen_w:
+#                print('behind2')
+                self.dx = self.fastspeed
+                self.dy = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+
+        #if the bullet is ahead of the player
+        if self.bullet_is_ahead:
+            #if the bullet's x is greater than the start of the screen increase the speed
+            if self.rect.x >= 0:
+#                print('ahead2')
+                self.dx = -self.fastspeed
+                self.dy = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+
+        #if the bullet is above the player
+        if self.bullet_is_above:
+            #if the bullet's y is less than the end of the screen increase the speed
+            if self.rect.y <= screen_h-150:
+#                print('above2')
+                self.dy = self.fastspeed
+                self.dx = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
+        #if the bullet is below the player
+        if self.bullet_is_below:
+            #if the bullet's y is greater than the start of the screen increase the speed
+            if self.rect.y >= 0:
+#                print('below2')
+                self.dy = -self.fastspeed
+                self.dx = 0
+                self.rect.y += self.dy
+                self.rect.x += self.dx
 
 #pac man ghosts
 class Enemy2(pygame.sprite.Sprite):
@@ -569,13 +672,116 @@ class Enemy2(pygame.sprite.Sprite):
         self.rect.y = y
         self.movedirection = 1
         self.movecounter = 0
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.vel_y = 0
+        self.in_air = True
+        self.climb = randint(1,2)
 
     def update(self):
+        dx = 2
+        dy = 0
+        #self.rect.center = pygame.mouse.get_pos()
+        #grav
+        self.vel_y += 1 #always falling down - how fast you fall down
+        if self.vel_y > 10: #max fall speed
+            self.vel_y = 10
+        dy += self.vel_y #fall down
+        #check collision
+        for tile in world_loaded[0].tile_list:
+        #check x
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with the side of walking blocks
+                #self.movedirection = 0
+                print('side')
+                pass
+        #stop player from moving off screen
+            if self.rect.x <= 0: 
+                self.movedirection = 1
+            if self.rect.x >= screen_w - tile_size:
+                self.rect.x = screen_w - tile_size
+
+        #check y
+            if self.rect.y <= 0 or self.rect.y >= screen_h: #stop player from moving off screen
+                dy = 1
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy,self.width, self.height ):#if player collides with walking blocks
+                if self.rect.x >= screen_w - 20:
+                    self.rect.x += self.movedirection
+                elif self.rect.x <= 20:
+                    self.rect.x -= self.movedirection
+                    
+                #check if below ground
+                if self.vel_y < 0:
+                    dy = tile[1].bottom - self.rect.top
+                    self.vel_y = 0
+                #check if above ground
+                elif self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+                    self.vel_y = 0
+                    self.in_air = False
+        
+#ladders
+#        for platform in platform_group:
+#            #when colliding with the ladders, robot decides to move up or not based on a random int
+#            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
+#                print('ladder')
+#                dy = 0
+#                self.climb = randint(1,2)
+#                if self.climb == 1:
+#                    print('1')
+#                    dy -= 20
+#                if self.climb == 2:
+#                    print('2')
+
+#            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
+#                dy += 20
+#                print('below')
+#            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
+#            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
+                 
+        for end in end_group:
+            #when colliding with end blocks, robot moves backwards respective to its direciton
+            if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                print('no floor')
+                self.movedirection *= -1
+        
+        #move the player
         self.rect.x += self.movedirection
-        self.movecounter += 1
-        if abs(self.movecounter) > 50:
-            self.movedirection *= -1
-            self.movecounter *= -1
+        self.rect.y += dy
+
+        screen.blit(self.image, self.rect)
+        
+    #if abs(self.movecounter) > 50:
+    #    self.movedirection *= -1
+    #    self.movecounter *= -1
+
+#bombs
+class Enemy3(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('enemy/bullet.png')
+        self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+        self.rect = self.image.get_rect()
+        self.speed = 5 #base speed
+        self.rect.x = x 
+        self.rect.y = y
+
+    def update(self):
+    #move down
+        self.rect.y += self.speed
+        if self.rect.y >= 450:
+            print('ground')
+            self.rect.y =0
+            self.rect.x = randint(40,920)
+            self.speed = 5
+        if self.rect.y >= 400:
+            self.image = pygame.image.load('enemy/enemy_death.png')
+            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+            self.speed = 1
+        else:   
+            self.image = pygame.image.load('enemy/bullet.png')
+            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+
+
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -617,25 +823,37 @@ class Exit(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+class End(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        img = pygame.image.load('bg.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size //2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.climb = True
+
 world_data = []
 key = pygame.key.get_pressed()
 player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
 #player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
 robot_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
-bullet = Enemy1(randint(0,screen_w-30),randint(0,screen_h-180))
-bullet_group.add(bullet)
+bomb_group = pygame.sprite.Group()
+bullet = Enemy1(20,50)
+bomb = Enemy3(20,50)
 #blob_group = pygame.sprite.Group()
 platform_group = pygame.sprite.Group()
+end_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
 #exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
 #coin_group.add(score_coin)
-restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img)
-exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img)
-start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img)
-solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img)
-multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img)
+restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img, pygame.K_k, "restart")
+exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img, pygame.K_k, "exit")
+start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img, pygame.K_k, "start")
+solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img, pygame.K_k, "solo")
+multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img, pygame.K_k, "multi")
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
@@ -644,11 +862,20 @@ solo = False
 game = False
 run_game = False
 
+button_selected_start = False
+button_selected_option = False
+button_selected_exit = False
+button_selected_solo = False
+button_selected_multi = False
+button_selected_back = False
+button_selected_restart = False
+current_selection = 3
+button_options = {1: "exit" , 2: "options", 3: "start",4:" ", 5:"solo", 6:"multi", 7:"back", 8:" ",  9: "restart", 10: " " }
+
 while run: #while game is running
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
-    
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
         if path.exists(f'level{level}_data'):
@@ -681,28 +908,102 @@ while run: #while game is running
     if pygame.key.get_pressed()[pygame.K_5]:
         theme = 1
         loaded = False
-#if the current scene is the main menu
+
+#used for selecting with keyboard
+    #if currently selected is 1, button is exit and so on....
+    if current_selection == 1:
+        button_selected_exit = True
+    else:
+        button_selected_exit = False
+
+    if current_selection == 2:
+        button_selected_option = True
+    else:
+        button_selected_option = False
+
+    if current_selection== 3 :
+        button_selected_start = True
+    else:
+        button_selected_start = False
+
+    if current_selection == 5:
+        button_selected_solo = True
+    else:
+        button_selected_solo = False
+
+    if current_selection == 6:
+        button_selected_multi = True
+    else:
+        button_selected_multi = False
+
+    if current_selection== 7:
+        button_selected_back = True
+    else:
+        button_selected_back = False
+
+    if current_selection== 9:
+        button_selected_restart = True
+    else:
+        button_selected_restart = False
+
+#if layer is on the satrtup screen
     if main:
-#draw and exit and start button, when pressed exit, exits the game and start, stop the menu scene and start games scene
+        #if the button is currently selected, draw its border
+        if button_selected_start:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 130, screen_h //2-20, 320, 160))
+        
+        if button_selected_exit:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 370, screen_h //2-20, 280, 160))
+        #allows the selection to loop from left to right or right to left
+        if current_selection <= 0: #blank
+            current_selection = 3 #start
+        #if the player is past 4 go to 1, if the player just restarted go to 1
+        if current_selection >= 4 and current_selection <= 6 or current_selection >= 10: #ahead of blank and less than multi or greater than blank
+            current_selection = 1#exit
+#draw exit and start buttons, when pressed exit, exits the game and start, stop the menu scene and start games scene
         if exit_button.draw():
             run = False
+        
         if start_button.draw():
             main = False
             game = True 
+            current_selection = 4
+#if player is on the gamemode selection screen
     if game:
+        #if the button is currently selected, draw its border
+        if button_selected_multi:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 -360, screen_h //2-20, 150, 160))
+        if button_selected_solo:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 130, screen_h //2-20, 160, 160))
+
+        #allows the selection to loop from left to right or right to left
+        if current_selection <= 4: #blank
+            current_selection = 7 #back
+        if current_selection >= 8: #blank
+            current_selection = 5 #solo
         #reset game variables
-        level = 1
+        level = 3
         score = 0
+        enemy_score = 0
         world_data = []
         world_loaded[0] = reset_level(level)
-        gameover = 0
+        #delete and create bullet for level 1
+        bullet_group.empty()
+        bullet = Enemy1(20,50)
+        bullet_group.add(bullet)
+        bomb_group.empty()
+        bomb = Enemy3(20,50)
+        bomb_group.add(bomb)
 
         if solo_button.draw():
             game = False
             solo = True
+            gameover = 0
+
         if multi_button.draw():
             game = False
             multiple = True
+            gameover = 0
 
         if multiple:
             multi().connect_to_game('localhost', 9999)
@@ -730,18 +1031,21 @@ while run: #while game is running
             if level == 2:
                 robot_group.update()
                 robot_group.draw(screen)
+                end_group.draw(screen)
             if level == 3:
-                enemy = Enemy2(240,40)
-                enemy.enemy3()
+                bomb_group.update()
+                bomb_group.draw(screen)
+                
 #update score
             if pygame.sprite.spritecollide(player, coin_group, True): #if player collides with coin, score goes up
                 score += 1
-                if len(coin_group) == score_to_pass: #if score is divisible by 2 and provides a whole number answer, player can pass the level
+                if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
                     gameover = 1
                 #coin_fx.play()
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
+            draw_text('Enemy Score: ' + str(enemy_score), font_score, white, tile_size + 450, screen_h - 50)
 
 
         #blob_group.draw(screen)
@@ -749,16 +1053,27 @@ while run: #while game is running
 #        gameover = player2.update(gameover)
 #if player dies
         if gameover == -1:
+            current_selection = 9 #blank
+            if button_selected_restart:
+                pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 60, screen_h //2 + 90, 140, 60))
             if restart_button.draw(): #draw the restart button, when pressed reset the game variables
                 world_data = []
                 world_loaded[0] = reset_level(level)
-                gameover = 0
                 score = 0
+                enemy_score = 0
+                main = True
+                game = False
+                run_game = False
+                solo = False 
+                multiple = False
+                
+
                 
 #if player passes level
         if gameover == 1: #next level starts and the world is not loaded
             level += 1 
             loaded = False
+            
             if level <= max_levels: #when level number is lower than total levels, resets levels
                 world_data = []
                 world_loaded[0] = reset_level(level)
@@ -767,8 +1082,10 @@ while run: #while game is running
             else: #if player finishes last level, display text and reset game
                 draw_text('YOU WIN!', font, blue,(screen_w //2) -140, screen_h //2  )
                 #restart game
+                current_selection = 9 #blank
+                if button_selected_restart:
+                    pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 60, screen_h //2 + 90, 140, 60))
                 if restart_button.draw():
-                    
                     main = True
                     game = False
                     run_game = False
@@ -778,6 +1095,14 @@ while run: #while game is running
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        #if game is not being played, allow user to select buttons
+        if gameover != 0:
+            if event.type == pygame.KEYDOWN:
+                if pygame.key.get_pressed()[pygame.K_LEFT]:
+                    current_selection -=1
+                if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                    current_selection +=1
+
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
 
