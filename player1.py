@@ -758,7 +758,7 @@ class Enemy2(pygame.sprite.Sprite):
 class Enemy3(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('enemy/bullet.png')
+        self.image = pygame.image.load('enemy/bomb.png')
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.speed = 5 #base speed
@@ -774,12 +774,12 @@ class Enemy3(pygame.sprite.Sprite):
             self.rect.x = randint(40,920)
             self.speed = 5
         if self.rect.y >= 400:
-            self.image = pygame.image.load('enemy/enemy_death.png')
-            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+            self.image = pygame.image.load('enemy/bomb_explosion.png')
+            self.image = pygame.transform.scale(self.image, (tile_size, tile_size//2))
             self.speed = 1
         else:   
-            self.image = pygame.image.load('enemy/bullet.png')
-            self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
+            self.image = pygame.image.load('enemy/bomb.png')
+            self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size))
 
 
 
