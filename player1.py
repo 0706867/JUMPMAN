@@ -679,7 +679,7 @@ class Enemy2(pygame.sprite.Sprite):
         self.climb = randint(1,2)
 
     def update(self):
-        dx = 2
+        dx = 1
         dy = 0
         #self.rect.center = pygame.mouse.get_pos()
         #grav
@@ -719,8 +719,29 @@ class Enemy2(pygame.sprite.Sprite):
                     self.vel_y = 0
                     self.in_air = False
         
+#end of the walkway
+        for end in end_group:
+            #when colliding with end blocks, robot moves backwards respective to its direciton
+            if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                print('no floor')
+                self.movedirection *= -1
 #ladders
-#        for platform in platform_group:
+#if the enemy hits a ladder, move up or down to a platform based on where the player is and start walking 
+        for platform in platform_group:
+            if self.rect.y <= player_pos.y:
+                print("above")
+                if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
+                    print('ladder')
+                    self.rect.y += player_pos.y-self.rect.y
+                
+            elif self.rect.y >= player_pos.y:
+                print("below")
+                if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
+                    print('ladder')
+                    self.rect.y -= self.rect.y-player_pos.y
+
+            elif self.rect.y == player_pos.y:
+                dy = 0
 #            #when colliding with the ladders, robot decides to move up or not based on a random int
 #            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
 #                print('ladder')
@@ -735,14 +756,9 @@ class Enemy2(pygame.sprite.Sprite):
 #            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
 #                dy += 20
 #                print('below')
-#            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
-#            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
-                 
-        for end in end_group:
-            #when colliding with end blocks, robot moves backwards respective to its direciton
-            if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                print('no floor')
-                self.movedirection *= -1
+            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
+            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
+                
         
         #move the player
         self.rect.x += self.movedirection
@@ -982,7 +998,7 @@ while run: #while game is running
         if current_selection >= 8: #blank
             current_selection = 5 #solo
         #reset game variables
-        level = 3
+        level = 2
         score = 0
         enemy_score = 0
         world_data = []
