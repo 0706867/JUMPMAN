@@ -723,22 +723,28 @@ class Enemy2(pygame.sprite.Sprite):
         for end in end_group:
             #when colliding with end blocks, robot moves backwards respective to its direciton
             if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
-                print('no floor')
+                #print('no floor')
                 self.movedirection *= -1
 #ladders
 #if the enemy hits a ladder, move up or down to a platform based on where the player is and start walking 
         for platform in platform_group:
             if self.rect.y <= player_pos.y:
-                print("above")
+                #print("above")
                 if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
-                    print('ladder')
-                    self.rect.y += player_pos.y-self.rect.y
+                    #print('ladder')
+                    if player_pos.y-self.rect.y <= 100:
+                        self.rect.y += player_pos.y-self.rect.y
+                    else:
+                        self.rect.y += 20
                 
             elif self.rect.y >= player_pos.y:
-                print("below")
+                #print("below")
                 if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
-                    print('ladder')
-                    self.rect.y -= self.rect.y-player_pos.y
+                    #print('ladder')
+                    if self.rect.y-player_pos.y <= 100:
+                        self.rect.y -= self.rect.y-player_pos.y
+                    else:
+                        self.rect.y -= 20
 
             elif self.rect.y == player_pos.y:
                 dy = 0
