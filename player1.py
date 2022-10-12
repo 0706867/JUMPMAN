@@ -270,6 +270,7 @@ class Player():
     def update(self, gameover):
         dx = 0
         dy = 0
+        speed = 3
         global player_pos 
         walk_cooldown = 5
         col_thresh = 20
@@ -279,15 +280,15 @@ class Player():
             if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 self.jumped = True
-                self.vel_y = -10
+                self.vel_y = -12
             if (key[self.jump]) == False: #if player is not pressing space, dont jump
                 self.jumped = False
             if key[self.left]: #when left key is pressed
-                dx -= 2 #moves the player left and is used for collision - checks 2 pixels ahead
+                dx -= speed #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1 #used for animation
                 self.direction = -1 #used for animation
             if key[self.right] :
-                dx += 2#moves the player left and is used for collision - checks 2 pixels ahead
+                dx += speed #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1#used for animation
                 self.direction = 1#used for animation
             if key[self.left] == False and key[self.right] == False:#when left and right are not pressed
@@ -359,7 +360,7 @@ class Player():
             #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
                 pass
-#                gameover = -1
+                gameover = -1
                 #gameover_fx.play()
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
@@ -380,10 +381,10 @@ class Player():
                     dy = 0
                     #moving up when on a ladder
                     if key[self.up]: 
-                            dy -= 2
+                            dy -= speed
                     #moving down when on a ladder
                     if key[self.down] : 
-                            dy += 2
+                            dy += speed
 
 #move the player
             self.rect.x += dx
@@ -762,19 +763,12 @@ class Enemy2(pygame.sprite.Sprite):
 #            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
 #                dy += 20
 #                print('below')
-            pygame.draw.rect(screen, (255), (self.rect.x-10, self.rect.y-10, 20, 5))
-            pygame.draw.rect(screen, (255, 0, 0), (self.rect.x-10, self.rect.y+self.height+10, 20, 5))
-                
-        
+                        
         #move the player
         self.rect.x += self.movedirection
         self.rect.y += dy
 
         screen.blit(self.image, self.rect)
-        
-    #if abs(self.movecounter) > 50:
-    #    self.movedirection *= -1
-    #    self.movecounter *= -1
 
 #bombs
 class Enemy3(pygame.sprite.Sprite):
@@ -790,14 +784,14 @@ class Enemy3(pygame.sprite.Sprite):
     def update(self):
     #move down
         self.rect.y += self.speed
-        if self.rect.y >= 450:
+        if self.rect.y >= 430:
             print('ground')
             self.rect.y =0
             self.rect.x = randint(40,920)
             self.speed = 5
-        if self.rect.y >= 400:
+        if self.rect.y >= 410:
             self.image = pygame.image.load('enemy/bomb_explosion.png')
-            self.image = pygame.transform.scale(self.image, (tile_size, tile_size//2))
+            self.image = pygame.transform.scale(self.image, (tile_size*2, tile_size))
             self.speed = 1
         else:   
             self.image = pygame.image.load('enemy/bomb.png')
@@ -814,10 +808,6 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.climb = True
-
-
-    def update(self):
-        pass
 
 class Lava(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -849,7 +839,7 @@ class End(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         img = pygame.image.load('bg.png')
-        self.image = pygame.transform.scale(img, (tile_size, tile_size //2))
+        self.image = pygame.transform.scale(img, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
