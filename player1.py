@@ -55,7 +55,7 @@ enemy_score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
-score_to_pass = 10
+score_to_pass = 0
 
 #colours
 white = (255,255,255)
@@ -162,7 +162,7 @@ def reset_level(level):
     #blob_group.empty()
     robot_group.empty()
     #exit_group.empty()
-    platform_group.empty()
+    climbable_group.empty()
     coin_group.empty()
     if path.exists(f'level{level}_data'):
         pickle_in = open(f'level{level}_data', 'rb')
@@ -228,6 +228,7 @@ class multi():
                     global score
                     global gameover
                     global score_to_pass
+                    global enemy_score
                     #print(text + " player 1")
                     #print(str(datas[7]))
                     player2 = Player2(datasx,datasy)
@@ -261,6 +262,11 @@ class Buttons():
         if key[self.button] and self.tag == button_options[current_selection]:
             action = True
             self.clicked = True
+        
+        if os.name == 'raspberrypi':
+            if button_top_middle.is_pressed and self.tag == button_options[current_selection]:
+                action = True
+                self.clicked = True
 
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
@@ -388,9 +394,9 @@ class Player():
                 chan.queue(gameover_fx)
             
 #ladders
-            for platform in platform_group:
+            for climbable in climbable_group:
                 #when colliding with ladders, player images changes to 'climb.png' and player doesnt fall, up and down can be used to move
-                if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
+                if climbable.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                     self.image = climb_img
                     #climb
                     dy = 0
@@ -489,18 +495,18 @@ class World():
                     tile= (img, img_rect)
                     self.tile_list.append(tile)
                 if tile == 2: #chain
-                    platform = Platform(col_count * tile_size, row_count * tile_size)
-                    platform.image = pygame.transform.scale(chain_img, (tile_size, tile_size))
-                    platform_group.add(platform)
+                    climbable = Climbable(col_count * tile_size, row_count * tile_size)
+                    climbable.image = pygame.transform.scale(chain_img, (tile_size, tile_size))
+                    climbable_group.add(climbable)
                 if tile == 3: #ladder left
-                    platform = Platform(col_count * tile_size, row_count * tile_size)
-                    platform.image = pygame.transform.scale(ladder_img, (tile_size, tile_size))
-                    platform_group.add(platform)
+                    climbable = Climbable(col_count * tile_size, row_count * tile_size)
+                    climbable.image = pygame.transform.scale(ladder_img, (tile_size, tile_size))
+                    climbable_group.add(climbable)
                 if tile == 4: #ladder right
-                    platform = Platform(col_count * tile_size, row_count * tile_size)
+                    climbable = Climbable(col_count * tile_size, row_count * tile_size)
                     lad = pygame.transform.flip(ladder_img, True, False)
-                    platform.image = pygame.transform.scale(lad, (tile_size, tile_size))
-                    platform_group.add(platform)
+                    climbable.image = pygame.transform.scale(lad, (tile_size, tile_size))
+                    climbable_group.add(climbable)
                 if tile == 5:
                     robot = Enemy2(col_count * tile_size, row_count * tile_size)
                     robot_group.add(robot)
@@ -708,7 +714,7 @@ class Enemy2(pygame.sprite.Sprite):
         #check x
             if tile[1].colliderect(self.rect.x + dx, self.rect.y,self.width, self.height ): #if player collides with the side of walking blocks
                 #self.movedirection = 0
-                print('side')
+                #print('side')
                 pass
         #stop player from moving off screen
             if self.rect.x <= 0: 
@@ -742,11 +748,11 @@ class Enemy2(pygame.sprite.Sprite):
                 #print('no floor')
                 self.movedirection *= -1
 #ladders
-#if the enemy hits a ladder, move up or down to a platform based on where the player is and start walking 
-        for platform in platform_group:
+#if the enemy hits a ladder, move up or down to a climbable based on where the player is and start walking 
+        for climbable in climbable_group:
             if self.rect.y <= player_pos.y:
                 #print("above")
-                if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
+                if climbable.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
                     #print('ladder')
                     if player_pos.y-self.rect.y <= 100:
                         self.rect.y += player_pos.y-self.rect.y
@@ -755,7 +761,7 @@ class Enemy2(pygame.sprite.Sprite):
                 
             elif self.rect.y >= player_pos.y:
                 #print("below")
-                if platform.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
+                if climbable.rect.colliderect(self.rect.x, self.rect.y, self.width, self.height): 
                     #print('ladder')
                     if self.rect.y-player_pos.y <= 100:
                         self.rect.y -= self.rect.y-player_pos.y
@@ -786,7 +792,7 @@ class Enemy3(pygame.sprite.Sprite):
     #move down
         self.rect.y += self.speed
         if self.rect.y >= 430:
-            print('ground')
+            #print('ground')
             self.rect.y =0
             self.rect.x = randint(40,920)
             self.speed = 5
@@ -800,7 +806,7 @@ class Enemy3(pygame.sprite.Sprite):
 
 
 
-class Platform(pygame.sprite.Sprite):
+class Climbable(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         img = pygame.image.load('ladder.png')
@@ -810,14 +816,6 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y = y
         self.climb = True
 
-class Lava(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        img = pygame.image.load('chain.png')
-        self.image = pygame.transform.scale(img, (tile_size, tile_size //2))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -826,15 +824,6 @@ class Coin(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(img, (tile_size, int(tile_size )))
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
-
-class Exit(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        img = pygame.image.load('climb.png')
-        self.image = pygame.transform.scale(img, (tile_size, int(tile_size * 1.5)))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
 
 class End(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -856,7 +845,7 @@ bomb_group = pygame.sprite.Group()
 bullet = Enemy1(20,50)
 bomb = Enemy3(20,50)
 #blob_group = pygame.sprite.Group()
-platform_group = pygame.sprite.Group()
+climbable_group = pygame.sprite.Group()
 end_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
 #exit_group = pygame.sprite.Group()
@@ -963,7 +952,8 @@ while run: #while game is running
 
 #between scenes
     if transition:
-        print('asdasd')
+        pass
+        #print('asdasd')
 
 #if layer is on the satrtup screen
     if main:
@@ -1001,7 +991,7 @@ while run: #while game is running
         if current_selection >= 8: #blank
             current_selection = 5 #solo
         #reset game variables
-        level = 2
+        level = 1
         score = 0
         enemy_score = 0
         world_data = []
@@ -1041,7 +1031,7 @@ while run: #while game is running
 
 #if game is running
         if gameover == 0:
-            platform_group.draw(screen)
+            climbable_group.draw(screen)
             coin_group.draw(screen)
 #display different enemy based on the level
             if level == 1:
@@ -1122,6 +1112,11 @@ while run: #while game is running
                     current_selection -=1
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
                     current_selection +=1
+                if os.name == 'raspberrypi':
+                    if joystick_left.is_pressed:
+                        current_selection -=1
+                    if joystick_right.is_pressed:
+                        current_selection +=1
 
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
