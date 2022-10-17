@@ -131,14 +131,24 @@ if theme == 0:
         block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
         ladder_img = pygame.image.load('ladder.png') 
 #sounds
-#pygame.mixer.music.load('')
-#pygame.mixer.music.play(-1, 0.0, 1000)
-#coin_fx = pygame.mixer.Sound('')
-#coin_fx.set_volume(0.5)
-#jump_fx = pygame.mixer.Sound('')
-#jump_fx.set_volume(0.5)
-#gameover_fx = pygame.mixer.Sound('')
-#gameover_fx.set_volume(0.5)
+#always plays this sound
+    #pygame.mixer.music.load('')
+    #pygame.mixer.music.play(-1, 0.0, 1000)
+chan = pygame.mixer.find_channel()
+volume = 0.1
+bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
+bg_fx.set_volume(volume)
+coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
+coin_fx.set_volume(volume)
+jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
+jump_fx.set_volume(volume)
+gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
+gameover_fx.set_volume(volume)
+spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+spawn_fx.set_volume(volume)
+walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+walk_fx.set_volume(volume)
+
 
 #converts text to image as required by pygame
 def draw_text(text, font, text_col, x, y):
@@ -279,6 +289,7 @@ class Player():
             #play when keyboard is connected
             if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
+                chan.queue(jump_fx)
                 self.jumped = True
                 self.vel_y = -12
             if (key[self.jump]) == False: #if player is not pressing space, dont jump
@@ -304,6 +315,7 @@ class Player():
             if os.name == 'raspberrypi':
                 if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
+                    chan.queue(jump_fx)
                     self.jumped = True
                     self.vel_y = -10
                 if joystick_up.is_pressed == False:
@@ -361,16 +373,19 @@ class Player():
             if pygame.sprite.spritecollide(self, robot_group, False):
                 pass
                 gameover = -1
-                #gameover_fx.play()
+                chan.queue(gameover_fx)
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
                 gameover = -1
+                chan.queue(gameover_fx)
             #bomb
             if pygame.sprite.spritecollide(self, bomb_group, False):
                 gameover = -1
+                chan.queue(gameover_fx)
             #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
+                chan.queue(gameover_fx)
             
 #ladders
             for platform in platform_group:
@@ -749,20 +764,6 @@ class Enemy2(pygame.sprite.Sprite):
 
             elif self.rect.y == player_pos.y:
                 dy = 0
-#            #when colliding with the ladders, robot decides to move up or not based on a random int
-#            if platform.rect.colliderect(self.rect.x-10, self.rect.y-24, 20, 5): #if there is a ladder above
-#                print('ladder')
-#                dy = 0
-#                self.climb = randint(1,2)
-#                if self.climb == 1:
-#                    print('1')
-#                    dy -= 20
-#                if self.climb == 2:
-#                    print('2')
-
-#            elif platform.rect.colliderect(self.rect.x-10, self.rect.y+self.height+10, 20, 5): # if there is a ladder below
-#                dy += 20
-#                print('below')
                         
         #move the player
         self.rect.x += self.movedirection
@@ -883,8 +884,10 @@ button_selected_back = False
 button_selected_restart = False
 current_selection = 3
 button_options = {1: "exit" , 2: "options", 3: "start",4:" ", 5:"solo", 6:"multi", 7:"back", 8:" ",  9: "restart", 10: " " }
+transition = False
 
 while run: #while game is running
+    #bg_fx.play()
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
@@ -957,6 +960,10 @@ while run: #while game is running
         button_selected_restart = True
     else:
         button_selected_restart = False
+
+#between scenes
+    if transition:
+        print('asdasd')
 
 #if layer is on the satrtup screen
     if main:
@@ -1053,7 +1060,7 @@ while run: #while game is running
                 score += 1
                 if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
                     gameover = 1
-                #coin_fx.play()
+                chan.queue(coin_fx)
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
@@ -1082,8 +1089,9 @@ while run: #while game is running
 
                 
 #if player passes level
-        if gameover == 1: #next level starts and the world is not loaded
+        elif gameover == 1: #next level starts and the world is not loaded
             level += 1 
+            transition = True
             loaded = False
             
             if level <= max_levels: #when level number is lower than total levels, resets levels
