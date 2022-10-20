@@ -18,7 +18,7 @@ pygame.init()
 #if ran on the retro pi initailise the buttons
 
 #if os.uname().nodename == 'raspberrypi':
-if platform.system() == 'raspberrypi':
+if str(os.name) == 'posix':
     from gpiozero import Button
     #joystick buttons
     joystick_up = Button(4)
@@ -38,7 +38,7 @@ clock = pygame.time.Clock()
 fps = 60
 
 screen_w = 960
-screen_h = 600
+screen_h = 550
 
 #font
 font_score = pygame.font.SysFont('Arial', 50)
@@ -136,18 +136,18 @@ if theme == 0:
     #pygame.mixer.music.play(-1, 0.0, 1000)
 chan = pygame.mixer.find_channel()
 volume = 0.1
-bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
-bg_fx.set_volume(volume)
-coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
-coin_fx.set_volume(volume)
-jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
-jump_fx.set_volume(volume)
-gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
-gameover_fx.set_volume(volume)
-spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-spawn_fx.set_volume(volume)
-walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-walk_fx.set_volume(volume)
+#bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
+#bg_fx.set_volume(volume)
+#coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
+#coin_fx.set_volume(volume)
+#jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
+#jump_fx.set_volume(volume)
+#gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
+#gameover_fx.set_volume(volume)
+#spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+#spawn_fx.set_volume(volume)
+#walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+#walk_fx.set_volume(volume)
 
 
 #converts text to image as required by pygame
@@ -263,7 +263,7 @@ class Buttons():
             action = True
             self.clicked = True
         
-        if os.name == 'raspberrypi':
+        if os.name == 'posix':
             if button_top_middle.is_pressed and self.tag == button_options[current_selection]:
                 action = True
                 self.clicked = True
@@ -295,7 +295,7 @@ class Player():
             #play when keyboard is connected
             if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
-                chan.queue(jump_fx)
+                #chan.queue(jump_fx)
                 self.jumped = True
                 self.vel_y = -12
             if (key[self.jump]) == False: #if player is not pressing space, dont jump
@@ -317,14 +317,13 @@ class Player():
                     self.image = self.images_left[self.index]
             
             #only run when playing on the retro pi, same as above
-            #if os.uname().nodename == 'raspberrypi':
-            if os.name == 'raspberrypi':
+            if os.name == 'posix':
                 if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
-                    chan.queue(jump_fx)
+                    #chan.queue(jump_fx)
                     self.jumped = True
                     self.vel_y = -10
-                if joystick_up.is_pressed == False:
+                if button_top_left.is_pressed == False:
                     self.jumped = False
                 if joystick_left.is_pressed:
                     dx -= 2
@@ -379,19 +378,19 @@ class Player():
             if pygame.sprite.spritecollide(self, robot_group, False):
                 pass
                 gameover = -1
-                chan.queue(gameover_fx)
+                #chan.queue(gameover_fx)
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
                 gameover = -1
-                chan.queue(gameover_fx)
+                #chan.queue(gameover_fx)
             #bomb
             if pygame.sprite.spritecollide(self, bomb_group, False):
                 gameover = -1
-                chan.queue(gameover_fx)
+                #chan.queue(gameover_fx)
             #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
-                chan.queue(gameover_fx)
+                #chan.queue(gameover_fx)
             
 #ladders
             for climbable in climbable_group:
@@ -406,6 +405,12 @@ class Player():
                     #moving down when on a ladder
                     if key[self.down] : 
                             dy += speed
+                    if os.name == "posix":
+                        if joystick_up.is_pressed: 
+                            dy -= speed
+                        #moving down when on a ladder
+                        if joystick_down.is_pressed : 
+                                dy += speed
 
 #move the player
             self.rect.x += dx
@@ -893,7 +898,7 @@ while run: #while game is running
     if theme == 1:
         if level <= max_levels:
             bg_img = pygame.image.load(levels[level-1][0])
-            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
             block_img = pygame.image.load(levels[level-1][1])
             block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
             ladder_img = pygame.image.load(levels[level-1][2])
@@ -901,7 +906,7 @@ while run: #while game is running
     if theme == 0:
         if level <= max_levels:
             bg_img = pygame.image.load('bg.png')
-            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
+            bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
             block_img = pygame.image.load('block2.png')
             block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
             ladder_img = pygame.image.load('ladder.png') 
@@ -953,7 +958,7 @@ while run: #while game is running
 #between scenes
     if transition:
         pass
-        #print('asdasd')
+
 
 #if layer is on the satrtup screen
     if main:
@@ -1050,7 +1055,7 @@ while run: #while game is running
                 score += 1
                 if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
                     gameover = 1
-                chan.queue(coin_fx)
+                #chan.queue(coin_fx)
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
@@ -1112,11 +1117,11 @@ while run: #while game is running
                     current_selection -=1
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
                     current_selection +=1
-                if os.name == 'raspberrypi':
-                    if joystick_left.is_pressed:
-                        current_selection -=1
-                    if joystick_right.is_pressed:
-                        current_selection +=1
+    if str(os.name) == 'posix':
+        if joystick_left.is_pressed:
+            current_selection -=1
+        if joystick_right.is_pressed:
+            current_selection +=1
 
         #if event.type == JOYDEVICEADDED:
         #    print("NEW DEVICE")
