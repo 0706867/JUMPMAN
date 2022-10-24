@@ -95,7 +95,7 @@ level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
 level_1 = ['level 1/ice_bg.png', 'level 1/ice_block.png','level 1/ice_ladder_clear.png']
 
 #level 2    background image            block image             ladder image
-level_2 = ['level 2/hall_bg.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
+level_2 = ['level 2/hall.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
 
 #level 3    background image            block image             ladder image
 level_3 = ['level 3/desert_bg.png', 'level 3/desert_block.png', 'level 3/desert_ladder.png']
@@ -388,7 +388,7 @@ class Player():
             #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
                 pass
-                gameover = -1
+#                gameover = -1
                 #chan.queue(gameover_fx)
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
@@ -694,7 +694,7 @@ class Enemy1(pygame.sprite.Sprite):
                 self.rect.y += self.dy
                 self.rect.x += self.dx
 
-#pac man ghosts
+#pac man ghosts/ robots
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -758,6 +758,8 @@ class Enemy2(pygame.sprite.Sprite):
             if end.rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height ):
                 #print('no floor')
                 self.movedirection *= -1
+        if self.rect.x >= screen_w - tile_size or self.rect.x <= tile_size :
+            self.movedirection *= -1
 #ladders
 #if the enemy hits a ladder, move up or down to a climbable based on where the player is and start walking 
         for climbable in climbable_group:
