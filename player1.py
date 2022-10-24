@@ -95,7 +95,7 @@ level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
 level_1 = ['level 1/ice_bg.png', 'level 1/ice_block.png','level 1/ice_ladder_clear.png']
 
 #level 2    background image            block image             ladder image
-level_2 = ['level 2/hall.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
+level_2 = ['level 2/hall_bg.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
 
 #level 3    background image            block image             ladder image
 level_3 = ['level 3/desert_bg.png', 'level 3/desert_block.png', 'level 3/desert_ladder.png']
@@ -113,26 +113,11 @@ bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
 block_img = pygame.image.load(levels[level-1] [1])
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
 ladder_img = pygame.image.load(levels[level-1] [2]) 
+ladder_flip_img = pygame.transform.flip(ladder_img, True, False)
 bg_bottom = pygame.image.load('bg.png')
 bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 
 
-#if theme is 1 load the sprites based on the level - star wars theme
-if theme == 1:
-    if level <= max_levels:
-        bg_img = pygame.image.load(levels[level-1][0])
-        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-        block_img = pygame.image.load(levels[level-1][1])
-        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-        ladder_img = pygame.image.load(levels[level-1][2])
-#if theme is 0 load the default sprites - original theme
-if theme == 0:
-    if level <= max_levels:
-        bg_img = pygame.image.load('bg.png')
-        bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h-120))
-        block_img = pygame.image.load('block2.png')
-        block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-        ladder_img = pygame.image.load('ladder.png') 
 #sounds
 #always plays this sound
     #pygame.mixer.music.load('')
@@ -250,7 +235,6 @@ class multi():
                             gameover = 1  
         client.close()
         return data
-
 
 class Buttons():
     def __init__(self, x, y, image, button, tag):
@@ -387,8 +371,7 @@ class Player():
 #enemy
             #robot
             if pygame.sprite.spritecollide(self, robot_group, False):
-                pass
-#                gameover = -1
+                gameover = -1
                 #chan.queue(gameover_fx)
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
@@ -515,8 +498,7 @@ class World():
                     climbable_group.add(climbable)
                 if tile == 4: #ladder right
                     climbable = Climbable(col_count * tile_size, row_count * tile_size)
-                    lad = pygame.transform.flip(ladder_img, True, False)
-                    climbable.image = pygame.transform.scale(lad, (tile_size, tile_size))
+                    climbable.image = pygame.transform.scale(ladder_flip_img, (tile_size, tile_size))
                     climbable_group.add(climbable)
                 if tile == 5:
                     robot = Enemy2(col_count * tile_size, row_count * tile_size)
@@ -524,9 +506,6 @@ class World():
                 if tile == 7:
                     coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2))
                     coin_group.add(coin)
-                if tile == 8:
-                    exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
-                    #exit_group.add(exit)
                 if tile == 9: #end
                     end = End(col_count * tile_size, row_count * tile_size)
                     end_group.add(end)
@@ -537,7 +516,7 @@ class World():
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
 
-#bullet
+#bullet - level 1 enemy
 class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -694,7 +673,7 @@ class Enemy1(pygame.sprite.Sprite):
                 self.rect.y += self.dy
                 self.rect.x += self.dx
 
-#pac man ghosts/ robots
+#pac man ghosts/ robots - level 2 enemies
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -790,7 +769,7 @@ class Enemy2(pygame.sprite.Sprite):
 
         screen.blit(self.image, self.rect)
 
-#bombs
+#bombs - level 3 enemies
 class Enemy3(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -817,8 +796,7 @@ class Enemy3(pygame.sprite.Sprite):
             self.image = pygame.image.load('enemy/bomb.png')
             self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size))
 
-
-
+#ladders and chains - letting the player climb
 class Climbable(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -828,8 +806,10 @@ class Climbable(pygame.sprite.Sprite):
         self.rect.y = y
         self.climb = True
     def update (self):
-        self.image = pygame.transform.scale(ladder_img, (tile_size, tile_size))
+        self.image = pygame.transform.scale(ladder_img, (tile_size, tile_size)) 
 
+
+#walking blocks - reskin code
 class Walkable(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -840,7 +820,7 @@ class Walkable(pygame.sprite.Sprite):
     def update(self):
         self.image = pygame.transform.scale(block_img, (tile_size, tile_size))
 
-
+#coins - give player scores
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -849,6 +829,7 @@ class Coin(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
 
+#end blocks - used for level 2 enemies
 class End(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -921,6 +902,8 @@ while run: #while game is running
             bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
             block_img = pygame.image.load(levels[level-1][1])
             ladder_img = pygame.image.load(levels[level-1][2])
+            ladder_flip_img = pygame.transform.flip(ladder_img, True, False)
+
 #if theme is 0 load the default sprites - original theme
     if theme == 0:
         if level <= max_levels:
@@ -928,15 +911,16 @@ while run: #while game is running
             bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
             block_img = pygame.image.load('block2.png')
             ladder_img = pygame.image.load('ladder.png') 
+            ladder_flip_img = pygame.transform.flip(ladder_img, True, False)
 #(if 4 is pressed set theme to 0, if 5 is pressed set theme to 1) and reload the world.
     if pygame.key.get_pressed()[pygame.K_4]:
+        walkable_group.update()
+        climbable_group.update()
         theme = 0
-        walkable_group.update()
-        climbable_group.update()
     if pygame.key.get_pressed()[pygame.K_5]:
-        theme = 1
         walkable_group.update()
         climbable_group.update()
+        theme = 1
 
 #used for selecting with keyboard
     #if currently selected is 1, button is exit and so on....
