@@ -1,3 +1,4 @@
+from itertools import count
 from random import random
 from random import randint
 import pygame
@@ -8,6 +9,7 @@ import pickle
 from os import path
 import socket
 import threading
+import time
 
 #audio set up
 pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -16,9 +18,9 @@ mixer.init()
 pygame.init()
 
 #if ran on the retro pi initailise the buttons
-
+osname = 'raspi'
 #if os.uname().nodename == 'raspberrypi':
-if str(os.name) == 'posix':
+if str(os.name) == osname:
     from gpiozero import Button
     #joystick buttons
     joystick_up = Button(4)
@@ -55,7 +57,8 @@ enemy_score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
-score_to_pass = 0
+score_to_pass = 10
+t = 0
 
 #colours
 white = (255,255,255)
@@ -148,6 +151,16 @@ volume = 0.1
 #spawn_fx.set_volume(volume)
 #walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
 #walk_fx.set_volume(volume)
+
+def countdown(t):
+    while t:
+        mins, secs = divmod(t, 60)
+        timer = '{:02d}:{:02d}'.format(mins, secs)
+        print(timer, end="\r")
+        time.sleep(1)
+        t -= 1
+    print('Fire in the hole!!')
+
 
 
 #converts text to image as required by pygame
@@ -263,7 +276,7 @@ class Buttons():
             action = True
             self.clicked = True
         
-        if os.name == 'posix':
+        if os.name == osname:
             if button_top_middle.is_pressed and self.tag == button_options[current_selection]:
                 action = True
                 self.clicked = True
@@ -317,7 +330,7 @@ class Player():
                     self.image = self.images_left[self.index]
             
             #only run when playing on the retro pi, same as above
-            if os.name == 'posix':
+            if os.name == osname:
                 if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
                     #jump_fx.play()
                     #chan.queue(jump_fx)
@@ -405,7 +418,7 @@ class Player():
                     #moving down when on a ladder
                     if key[self.down] : 
                             dy += speed
-                    if os.name == "posix":
+                    if os.name == osname:
                         if joystick_up.is_pressed: 
                             dy -= speed
                         #moving down when on a ladder
@@ -957,7 +970,8 @@ while run: #while game is running
 
 #between scenes
     if transition:
-        pass
+        countdown(2)
+        transition = False
 
 
 #if layer is on the satrtup screen
@@ -1086,7 +1100,10 @@ while run: #while game is running
 #if player passes level
         elif gameover == 1: #next level starts and the world is not loaded
             level += 1 
-            transition = True
+            if level <= max_levels:
+                screen.fill(0)
+                draw_text('Score: '+ str(score), font, (255, 255, 255),(screen_w //2)-140, screen_h //2 )
+                transition = True
             loaded = False
             
             if level <= max_levels: #when level number is lower than total levels, resets levels
@@ -1117,7 +1134,7 @@ while run: #while game is running
                     current_selection -=1
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
                     current_selection +=1
-    if str(os.name) == 'posix':
+    if str(os.name) == osname:
         if joystick_left.is_pressed:
             current_selection -=1
         if joystick_right.is_pressed:
