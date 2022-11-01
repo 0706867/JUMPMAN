@@ -23,18 +23,33 @@ osname = 'raspi'
 if str(os.name) == osname:
     from gpiozero import Button
     #joystick buttons
-    joystick_up = Button(4)
-    joystick_down = Button(17)
-    joystick_left = Button(27)
-    joystick_right = Button(22)
-    button_top_left = Button(18)
-    button_top_middle = Button(15)
+    up = Button(4)
+    down = Button(17)
+    left = Button(27)
+    right = Button(22)
+    jump = Button(18)
+    interact = Button(15)
     button_top_right = Button(14)
     button_bottom_left = Button(25)
     button_bottom_middle = Button(24)
     button_bottom_right = Button(23)
     button_blue_left = Button(10)
     button_blue_right = Button(9)
+
+if str(os.name) == "Linux":
+    up = pygame.K_UP
+    down = pygame.K_DOWN
+    left = pygame.K_LEFT
+    right =pygame.K_RIGHT
+    jump = pygame.K_SPACE
+    interact = pygame.K_RETURN
+    button_top_right = Button(14)
+    button_bottom_left = Button(25)
+    button_bottom_middle = Button(24)
+    button_bottom_right = Button(23)
+    button_blue_left = Button(10)
+    button_blue_right = Button(9)
+
 
 clock = pygame.time.Clock()
 fps = 60
@@ -45,6 +60,7 @@ screen_h = 550
 #font
 font_score = pygame.font.SysFont('Arial', 50)
 font = pygame.font.SysFont('Arial', 70)
+font_jump = pygame.font.SysFont('Arial', 12)
 
 #variables
 tile_size = 24
@@ -57,7 +73,7 @@ enemy_score = 0
 theme = 0
 world_loaded = []
 player_pos = Vector2(int(0),int(0))
-score_to_pass = 10
+score_to_pass = 0
 t = 0
 
 #colours
@@ -82,11 +98,16 @@ climb_img = pygame.image.load('climb.png')
 climb_img = pygame.transform.scale(climb_img, (tile_size,tile_size))
 restart_img = pygame.image.load('restart_btn.png')
 start_img = pygame.image.load('start_btn.png')
+options_img = pygame.image.load('options.png')
 exit_img = pygame.image.load('exit_btn.png')
 singleplayer_img = pygame.image.load('singleplayer.png')
 singleplayer_img = pygame.transform.scale(singleplayer_img, (120, 120))
 versus_img = pygame.image.load('versus.png')
 versus_img = pygame.transform.scale(versus_img, (120, 120))
+music_img = pygame.image.load('music_img.png')
+music_img = pygame.transform.scale(music_img, (120, 120))
+audio_img = pygame.image.load('audio_img.png')
+audio_img = pygame.transform.scale(audio_img, (120, 120))
 
 #default theme
 level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
@@ -105,7 +126,7 @@ level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.
 #enemy idle     enemy idle animation 2  enemy bullet        enemy death face            enemy face              enemy shoot anim
 'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
 
-#audomatic images change
+#automatic images change
 levels = [level_1, level_2, level_3, level_4]
 #gets the index (current level-1 as array start at 0) from array above and select the required image
 bg_img = pygame.image.load(levels[level-1] [0])
@@ -123,19 +144,20 @@ bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
     #pygame.mixer.music.load('')
     #pygame.mixer.music.play(-1, 0.0, 1000)
 chan = pygame.mixer.find_channel()
-volume = 0.1
+music_volume = 0.1
+audio_volume = 0.1
 #bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
-#bg_fx.set_volume(volume)
+#bg_fx.set_volume(music_volume)
 #coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
-#coin_fx.set_volume(volume)
+#coin_fx.set_volume(audio_volume)
 #jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
-#jump_fx.set_volume(volume)
+#jump_fx.set_volume(audio_volume)
 #gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
-#gameover_fx.set_volume(volume)
+#gameover_fx.set_volume(audio_volume)
 #spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-#spawn_fx.set_volume(volume)
+#spawn_fx.set_volume(audio_volume)
 #walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-#walk_fx.set_volume(volume)
+#walk_fx.set_volume(audio_volume)
 
 def countdown(t):
     while t:
@@ -259,7 +281,7 @@ class Buttons():
             self.clicked = True
         
         if os.name == osname:
-            if button_top_middle.is_pressed and self.tag == button_options[current_selection]:
+            if interact.is_pressed and self.tag == button_options[current_selection]:
                 action = True
                 self.clicked = True
 
@@ -857,17 +879,19 @@ coin_group = pygame.sprite.Group()
 #exit_group = pygame.sprite.Group()
 score_coin = Coin(tile_size //2, tile_size //2)
 #coin_group.add(score_coin)
-restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img, pygame.K_k, "restart")
-exit_button = Buttons(screen_w //2 - 350, screen_h //2 , exit_img, pygame.K_k, "exit")
-start_button = Buttons(screen_w //2 + 150, screen_h //2, start_img, pygame.K_k, "start")
-solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img, pygame.K_k, "solo")
-multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img, pygame.K_k, "multi")
+restart_button = Buttons(screen_w //2 - 50, screen_h //2 + 100, restart_img, pygame.K_RETURN, "restart")
+exit_button = Buttons(screen_w //2 - 450, screen_h //2 , exit_img, pygame.K_RETURN, "exit")
+start_button = Buttons(screen_w //2 + 180, screen_h //2, start_img, pygame.K_RETURN, "start")
+option_button = Buttons(screen_w //2 - 160, screen_h //2, options_img, pygame.K_RETURN, "options")
+solo_button = Buttons(screen_w //2 + 150, screen_h //2, singleplayer_img, pygame.K_RETURN, "solo")
+multi_button = Buttons(screen_w //2 - 350, screen_h //2, versus_img, pygame.K_RETURN, "multi")
 
 run = True #is game running - used for closing game
 loaded = False #is map loaded - used for reskinning code
 multiple = False
 solo = False
 game = False
+options = False
 run_game = False
 
 button_selected_start = False
@@ -967,12 +991,18 @@ while run: #while game is running
 
 #if layer is on the satrtup screen
     if main:
+        draw_text("HeJump",font, white, (screen_w //2) - 100, 100)
+        draw_text("JUMPMAN!!!",font_jump, white, (screen_w //2) , 180)
         #if the button is currently selected, draw its border
         if button_selected_start:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 130, screen_h //2-20, 320, 160))
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 + 170, screen_h //2-20, 300, 160))
         
+        if button_selected_option:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 -170 , screen_h //2-20, 300, 160))
+
         if button_selected_exit:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 370, screen_h //2-20, 280, 160))
+            pygame.draw.rect(screen, (140,140,140), (screen_w //2 - 460, screen_h //2-20, 260, 160))
+
         #allows the selection to loop from left to right or right to left
         if current_selection <= 0: #blank
             current_selection = 3 #start
@@ -983,10 +1013,24 @@ while run: #while game is running
         if exit_button.draw():
             run = False
         
+        if option_button.draw():
+            main = False
+            options = True
+
         if start_button.draw():
             main = False
             game = True 
             current_selection = 4
+
+    if options:
+        #change music volume
+        screen.blit(music_img, (screen_w//6, 120))
+        draw_text(str(music_volume),font_score, white, (screen_w //6) + 200 , 160)
+
+        #change game sound volume
+        screen.blit(audio_img, (screen_w//6,320))
+        draw_text(str(audio_volume),font_score, white, (screen_w //6) + 200, 360)
+
 #if player is on the gamemode selection screen
     if game:
         #if the button is currently selected, draw its border
