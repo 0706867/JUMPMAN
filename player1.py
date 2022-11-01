@@ -17,39 +17,6 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 mixer.init()
 pygame.init()
 
-#if ran on the retro pi initailise the buttons
-osname = 'raspi'
-#if os.uname().nodename == 'raspberrypi':
-if str(os.name) == osname:
-    from gpiozero import Button
-    #joystick buttons
-    up = Button(4)
-    down = Button(17)
-    left = Button(27)
-    right = Button(22)
-    jump = Button(18)
-    interact = Button(15)
-    button_top_right = Button(14)
-    button_bottom_left = Button(25)
-    button_bottom_middle = Button(24)
-    button_bottom_right = Button(23)
-    button_blue_left = Button(10)
-    button_blue_right = Button(9)
-
-if str(os.name) == "Linux":
-    up = pygame.K_UP
-    down = pygame.K_DOWN
-    left = pygame.K_LEFT
-    right =pygame.K_RIGHT
-    jump = pygame.K_SPACE
-    interact = pygame.K_RETURN
-    button_top_right = Button(14)
-    button_bottom_left = Button(25)
-    button_bottom_middle = Button(24)
-    button_bottom_right = Button(23)
-    button_blue_left = Button(10)
-    button_blue_right = Button(9)
-
 
 clock = pygame.time.Clock()
 fps = 60
@@ -108,6 +75,12 @@ music_img = pygame.image.load('music_img.png')
 music_img = pygame.transform.scale(music_img, (120, 120))
 audio_img = pygame.image.load('audio_img.png')
 audio_img = pygame.transform.scale(audio_img, (120, 120))
+esc_img = pygame.image.load('esc.png')
+esc_img = pygame.transform.scale(esc_img, (120, 120))
+retro_img = pygame.image.load('retro_img.png')
+retro_img = pygame.transform.scale(retro_img, (120, 120))
+star_wars_img = pygame.image.load('star_wars_img.png')
+star_wars_img = pygame.transform.scale(star_wars_img, (120, 120))
 
 #default theme
 level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
@@ -158,6 +131,9 @@ audio_volume = 0.1
 #spawn_fx.set_volume(audio_volume)
 #walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
 #walk_fx.set_volume(audio_volume)
+
+osname = 'raspi'
+interact = pygame.K_RETURN
 
 def countdown(t):
     while t:
@@ -291,13 +267,8 @@ class Buttons():
         return action
 
 class Player():
-    def __init__(self, x, y, up, down, left, right, jump):
+    def __init__(self, x, y):
         self.reset(x,y)
-        self.up = up
-        self.down = down
-        self.left = left
-        self.right = right 
-        self.jump = jump
 
 
     def update(self, gameover):
@@ -307,56 +278,58 @@ class Player():
         global player_pos 
         walk_cooldown = 5
         col_thresh = 20
+        #if ran on the retro pi initailise the buttons
+        osname = 'raspi'
         key = pygame.key.get_pressed()
+        #if os.uname().nodename == 'raspberrypi':
+        if str(os.name) == osname:
+            from gpiozero import Button
+            #joystick buttons
+            up = Button(4)
+            down = Button(17)
+            left = Button(27)
+            right = Button(22)
+            jump = Button(18)
+            interact = Button(15)
+            button_top_right = Button(14)
+            button_bottom_left = Button(25)
+            button_bottom_middle = Button(24)
+            button_bottom_right = Button(23)
+            button_blue_left = Button(10)
+            button_blue_right = Button(9)
+
+        else:
+            up =  key[pygame.K_UP]
+            down = key[pygame.K_DOWN]
+            left = key[pygame.K_LEFT]
+            right = key[pygame.K_RIGHT]
+            jump = key[pygame.K_SPACE]
+            interact = key[pygame.K_RETURN]
+
         if gameover == 0:
             #play when keyboard is connected
-            if (key[self.jump]) and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
+            if jump and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
                 #jump_fx.play()
                 #chan.queue(jump_fx)
                 self.jumped = True
                 self.vel_y = -12
-            if (key[self.jump]) == False: #if player is not pressing space, dont jump
+            if jump == False: #if player is not pressing space, dont jump
                 self.jumped = False
-            if key[self.left]: #when left key is pressed
+            if left: #when left key is pressed
                 dx -= speed #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1 #used for animation
                 self.direction = -1 #used for animation
-            if key[self.right] :
+            if right:
                 dx += speed #moves the player left and is used for collision - checks 2 pixels ahead
                 self.counter += 1#used for animation
                 self.direction = 1#used for animation
-            if key[self.left] == False and key[self.right] == False:#when left and right are not pressed
+            if left == False and right == False:#when left and right are not pressed
                 self.counter = 0 #stops on current image
                 self.index = 0 #used for animation
                 if self.direction == 1: #if direction is 1, use right facing images
                     self.image = self.images_right[self.index]
                 if self.direction == -1:  #if direction is -1, use left facing images
                     self.image = self.images_left[self.index]
-            
-            #only run when playing on the retro pi, same as above
-            if os.name == osname:
-                if button_top_left.is_pressed and self.jumped == False and self.in_air == False:
-                    #jump_fx.play()
-                    #chan.queue(jump_fx)
-                    self.jumped = True
-                    self.vel_y = -10
-                if button_top_left.is_pressed == False:
-                    self.jumped = False
-                if joystick_left.is_pressed:
-                    dx -= 2
-                    self.counter += 1
-                    self.direction = -1
-                if joystick_right.is_pressed:
-                    dx += 2
-                    self.counter += 1
-                    self.direction = 1
-                if joystick_left.is_pressed == False and joystick_right.is_pressed == False:
-                    self.counter = 0
-                    self.index = 0
-                    if self.direction == 1:
-                        self.image = self.images_right[self.index]
-                    if self.direction == -1:
-                        self.image = self.images_left[self.index]
 
             #grav
             self.vel_y += 1 #always falling down - how fast you fall down
@@ -416,17 +389,11 @@ class Player():
                     #climb
                     dy = 0
                     #moving up when on a ladder
-                    if key[self.up]: 
+                    if up: 
                             dy -= speed
                     #moving down when on a ladder
-                    if key[self.down] : 
+                    if down : 
                             dy += speed
-                    if os.name == osname:
-                        if joystick_up.is_pressed: 
-                            dy -= speed
-                        #moving down when on a ladder
-                        if joystick_down.is_pressed : 
-                                dy += speed
 
 #move the player
             self.rect.x += dx
@@ -864,8 +831,8 @@ class End(pygame.sprite.Sprite):
 
 world_data = []
 key = pygame.key.get_pressed()
-player = Player(screen_w //2 , 430,  pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_SPACE)
-#player2 = Player(screen_w //3 , 430, pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d, pygame.K_o)
+player = Player(screen_w //2 , 430)
+#player2 = Player(screen_w //3 , 430)
 robot_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 bomb_group = pygame.sprite.Group()
@@ -904,7 +871,9 @@ button_selected_restart = False
 current_selection = 3
 button_options = {1: "exit" , 2: "options", 3: "start",4:" ", 5:"solo", 6:"multi", 7:"back", 8:" ",  9: "restart", 10: " " }
 transition = False
-
+music = True
+audio = False
+button = 0
 while run: #while game is running
     #bg_fx.play()
     clock.tick(fps)
@@ -991,6 +960,7 @@ while run: #while game is running
 
 #if layer is on the satrtup screen
     if main:
+        gameover = -1
         draw_text("HeJump",font, white, (screen_w //2) - 100, 100)
         draw_text("JUMPMAN!!!",font_jump, white, (screen_w //2) , 180)
         #if the button is currently selected, draw its border
@@ -1023,16 +993,78 @@ while run: #while game is running
             current_selection = 4
 
     if options:
+
+        if pygame.key.get_pressed()[pygame.K_UP]:
+            countdown(1)
+            button += 1
+            audio = True
+            music = False
+
+        if pygame.key.get_pressed()[pygame.K_DOWN]:
+            countdown(1)
+            button -= 1
+            music = True
+            audio = False
+
         #change music volume
+        if button == 0:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 110, 140, 140))
         screen.blit(music_img, (screen_w//6, 120))
-        draw_text(str(music_volume),font_score, white, (screen_w //6) + 200 , 160)
+        draw_text(str(round(music_volume, 2)),font_score, white, (screen_w //6) + 200 , 160)
 
         #change game sound volume
+        if button == 1:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 310, 140, 140))
         screen.blit(audio_img, (screen_w//6,320))
-        draw_text(str(audio_volume),font_score, white, (screen_w //6) + 200, 360)
+        draw_text(str(round(audio_volume, 1)),font_score, white, (screen_w //6) + 200, 360)
+
+        draw_text("THEME :",font_score, white, (screen_w //1.5), 120)
+
+        #theme 1 - retro
+        if button == 2:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //1.6 - 10, 310, 140, 140))
+            if pygame.key.get_pressed()[pygame.K_RETURN]:
+                theme = 0
+        screen.blit(retro_img, (screen_w//1.6,320))
+
+        #theme 2 - star wars
+        if button == 3:
+            pygame.draw.rect(screen, (140,140,140), (screen_w //1.2 - 10, 310, 140, 140))
+            if pygame.key.get_pressed()[pygame.K_RETURN]:
+                theme = 1
+        screen.blit(star_wars_img, (screen_w//1.2,320))
+
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            options = False
+            main = True
+        screen.blit(esc_img, (10,10))
+
+        if audio:
+            if pygame.key.get_pressed()[pygame.K_LEFT]:
+                if audio_volume >= 0.1:
+                    audio_volume -= 0.1
+                    countdown(1)
+            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                if audio_volume <= 0.9:
+                    audio_volume += 0.1
+                    countdown(1)
+
+        if music:
+            if pygame.key.get_pressed()[pygame.K_LEFT]:
+                if music_volume >= 0.1:
+                    music_volume -= 0.1
+                    countdown(1)
+            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                if music_volume <= 0.9:
+                    music_volume += 0.1
+                    countdown(1)
 
 #if player is on the gamemode selection screen
     if game:
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            game = False
+            main = True
+        screen.blit(esc_img, (10,10))
         #if the button is currently selected, draw its border
         if button_selected_multi:
             pygame.draw.rect(screen, (140,140,140), (screen_w //2 -360, screen_h //2-20, 150, 160))
@@ -1076,6 +1108,10 @@ while run: #while game is running
             run_game = True
     
     if run_game and loaded:
+        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+            run_game = False
+            main = True
+        screen.blit(esc_img, (10,10))
         loaded = True
         if len(world_loaded) <= 5:
             world_loaded[0].draw()
