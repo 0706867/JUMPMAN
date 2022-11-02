@@ -76,7 +76,7 @@ music_img = pygame.transform.scale(music_img, (120, 120))
 audio_img = pygame.image.load('audio_img.png')
 audio_img = pygame.transform.scale(audio_img, (120, 120))
 esc_img = pygame.image.load('esc.png')
-esc_img = pygame.transform.scale(esc_img, (120, 120))
+esc_img = pygame.transform.scale(esc_img, (32, 32))
 retro_img = pygame.image.load('retro_img.png')
 retro_img = pygame.transform.scale(retro_img, (120, 120))
 star_wars_img = pygame.image.load('star_wars_img.png')
@@ -304,7 +304,6 @@ class Player():
             left = key[pygame.K_LEFT]
             right = key[pygame.K_RIGHT]
             jump = key[pygame.K_SPACE]
-            interact = key[pygame.K_RETURN]
 
         if gameover == 0:
             #play when keyboard is connected
@@ -993,6 +992,10 @@ while run: #while game is running
             current_selection = 4
 
     if options:
+        if button >= 4:
+            button = 0
+        if button <= -1:
+            button = 3
 
         if pygame.key.get_pressed()[pygame.K_UP]:
             countdown(1)
@@ -1008,32 +1011,51 @@ while run: #while game is running
 
         #change music volume
         if button == 0:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 110, 140, 140))
+            music_btn = pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 110, 140, 140))
         screen.blit(music_img, (screen_w//6, 120))
         draw_text(str(round(music_volume, 2)),font_score, white, (screen_w //6) + 200 , 160)
 
         #change game sound volume
         if button == 1:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 310, 140, 140))
+            audio_btn = pygame.draw.rect(screen, (140,140,140), (screen_w //6 - 10, 310, 140, 140))
         screen.blit(audio_img, (screen_w//6,320))
         draw_text(str(round(audio_volume, 1)),font_score, white, (screen_w //6) + 200, 360)
-
+     
         draw_text("THEME :",font_score, white, (screen_w //1.5), 120)
 
+
+# can click on the buttons using mouse 
+        pos = pygame.mouse.get_pos()
+        retro = retro_img.get_rect()
+        retro.x = screen_w//1.6
+        retro.y = 320
+        star_wars = star_wars_img.get_rect()
+        star_wars.x = screen_w//1.2
+        star_wars.y = 320
+        if retro.colliderect((pos[0], pos[1], 20,20)):
+            pygame.draw.rect(screen, (140,140,140), (screen_w //1.6 - 10, 310, 140, 140))
+            if pygame.mouse.get_pressed()[0] == 1:
+                theme = 0
+        if star_wars.collidepoint(pos):
+            pygame.draw.rect(screen, (140,140,140), (screen_w //1.2 - 10, 310, 140, 140))
+            if pygame.mouse.get_pressed()[0] == 1:
+                theme = 1
+                
         #theme 1 - retro
         if button == 2:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //1.6 - 10, 310, 140, 140))
-            if pygame.key.get_pressed()[pygame.K_RETURN]:
+            retro = pygame.draw.rect(screen, (140,140,140), (screen_w //1.6 - 10, 310, 140, 140))
+            if pygame.key.get_pressed()[pygame.K_RETURN] or retro.collidepoint(pos):
                 theme = 0
         screen.blit(retro_img, (screen_w//1.6,320))
 
         #theme 2 - star wars
         if button == 3:
-            pygame.draw.rect(screen, (140,140,140), (screen_w //1.2 - 10, 310, 140, 140))
-            if pygame.key.get_pressed()[pygame.K_RETURN]:
+            star_wars = pygame.draw.rect(screen, (140,140,140), (screen_w //1.2 - 10, 310, 140, 140))
+            if pygame.key.get_pressed()[pygame.K_RETURN] or star_wars.collidepoint(pos):
                 theme = 1
         screen.blit(star_wars_img, (screen_w//1.2,320))
 
+#escape button
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             options = False
             main = True
