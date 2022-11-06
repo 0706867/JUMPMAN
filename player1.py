@@ -113,24 +113,19 @@ bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 
 
 #sounds
-#always plays this sound
-    #pygame.mixer.music.load('')
-    #pygame.mixer.music.play(-1, 0.0, 1000)
 chan = pygame.mixer.find_channel()
 music_volume = 0.1
-audio_volume = 0.1
-#bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
-#bg_fx.set_volume(music_volume)
-#coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
-#coin_fx.set_volume(audio_volume)
-#jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
-#jump_fx.set_volume(audio_volume)
-#gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
-#gameover_fx.set_volume(audio_volume)
-#spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-#spawn_fx.set_volume(audio_volume)
-#walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-#walk_fx.set_volume(audio_volume)
+audio_volume = 1
+bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
+bg_fx_name = 'Audio/Jumpman_Level_Jazz.wav'
+coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
+jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
+gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
+spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+#always plays this sound
+pygame.mixer.music.load(bg_fx_name)
+pygame.mixer.music.play(-1, 0.0, 3000)
 
 osname = 'raspi'
 interact = pygame.K_RETURN
@@ -308,7 +303,7 @@ class Player():
         if gameover == 0:
             #play when keyboard is connected
             if jump and self.jumped == False and self.in_air == False: #if space is pressed and player is not in air or jumping, let them jump
-                #jump_fx.play()
+                jump_fx.play()
                 #chan.queue(jump_fx)
                 self.jumped = True
                 self.vel_y = -12
@@ -367,18 +362,22 @@ class Player():
             if pygame.sprite.spritecollide(self, robot_group, False):
                 gameover = -1
                 #chan.queue(gameover_fx)
+                gameover_fx.play()
             #bullet
             if pygame.sprite.spritecollide(self, bullet_group, False):
                 gameover = -1
                 #chan.queue(gameover_fx)
+                gameover_fx.play()
             #bomb
             if pygame.sprite.spritecollide(self, bomb_group, False):
                 gameover = -1
                 #chan.queue(gameover_fx)
+                gameover_fx.play()
             #fall to death
             if self.rect.y >= 480: #minimum y value - when the player falls off map
                 gameover = -1  #player dies
                 #chan.queue(gameover_fx)
+                gameover_fx.play()
             
 #ladders
             for climbable in climbable_group:
@@ -796,7 +795,6 @@ class Climbable(pygame.sprite.Sprite):
     def update (self):
         self.image = pygame.transform.scale(ladder_img, (tile_size, tile_size)) 
 
-
 #walking blocks - reskin code
 class Walkable(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -873,8 +871,16 @@ transition = False
 music = True
 audio = False
 button = 0
+
 while run: #while game is running
-    #bg_fx.play()
+#    pygame.mixer.music.load(bg_fx_name)
+#    pygame.mixer.music.play(-1) 
+    pygame.mixer.music.set_volume(music_volume)
+    coin_fx.set_volume(audio_volume)
+    jump_fx.set_volume(audio_volume)
+    gameover_fx.set_volume(audio_volume)
+    spawn_fx.set_volume(audio_volume)
+    walk_fx.set_volume(audio_volume)
     clock.tick(fps)
     screen.blit(bg_img, (0,0))
     world_drawn = 0
@@ -1164,6 +1170,7 @@ while run: #while game is running
                 if len(coin_group) == score_to_pass: #if teh size of coin group is the same as the required amount to pass
                     gameover = 1
                 #chan.queue(coin_fx)
+                coin_fx.play()
 #display score
             screen.blit(bg_bottom, (0, screen_h-50))
             draw_text('Score: ' + str(score), font_score, white, tile_size - 10, screen_h - 50)
@@ -1231,14 +1238,11 @@ while run: #while game is running
                 if pygame.key.get_pressed()[pygame.K_RIGHT]:
                     current_selection +=1
     if str(os.name) == osname:
-        if joystick_left.is_pressed:
+        from gpiozero import Button
+        if Button(27).is_pressed:
             current_selection -=1
-        if joystick_right.is_pressed:
+        if Button(22).is_pressed:
             current_selection +=1
-
-        #if event.type == JOYDEVICEADDED:
-        #    print("NEW DEVICE")
-
     
     pygame.display.update()
 
