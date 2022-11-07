@@ -52,52 +52,52 @@ screen = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption('Server')
 
 #images
-bg_img = pygame.image.load('bg.png')
+bg_img = pygame.image.load('Assets/images/bg.png')
 bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
-block_img = pygame.image.load('block2.png')
+block_img = pygame.image.load('Assets/images/block2.png')
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
-chain_img = pygame.image.load('chain.png')
+chain_img = pygame.image.load('Assets/images/chain.png')
 chain_img = pygame.transform.scale(chain_img, (tile_size,tile_size))
-ladder_img = pygame.image.load('ladder.png')
-coin_img = pygame.image.load('coin.png')
+ladder_img = pygame.image.load('Assets/images/ladder.png')
+coin_img = pygame.image.load('Assets/images/coin.png')
 coin_img = pygame.transform.scale(coin_img, (tile_size,tile_size))
-climb_img = pygame.image.load('climb.png')
+climb_img = pygame.image.load('Assets/images/climb.png')
 climb_img = pygame.transform.scale(climb_img, (tile_size,tile_size))
-restart_img = pygame.image.load('restart_btn.png')
-start_img = pygame.image.load('start_btn.png')
-options_img = pygame.image.load('options.png')
-exit_img = pygame.image.load('exit_btn.png')
-singleplayer_img = pygame.image.load('singleplayer.png')
+restart_img = pygame.image.load('Assets/images/restart_btn.png')
+start_img = pygame.image.load('Assets/images/start_btn.png')
+options_img = pygame.image.load('Assets/images/options.png')
+exit_img = pygame.image.load('Assets/images/exit_btn.png')
+singleplayer_img = pygame.image.load('Assets/images/singleplayer.png')
 singleplayer_img = pygame.transform.scale(singleplayer_img, (120, 120))
-versus_img = pygame.image.load('versus.png')
+versus_img = pygame.image.load('Assets/images/versus.png')
 versus_img = pygame.transform.scale(versus_img, (120, 120))
-music_img = pygame.image.load('music_img.png')
+music_img = pygame.image.load('Assets/images/music_img.png')
 music_img = pygame.transform.scale(music_img, (120, 120))
-audio_img = pygame.image.load('audio_img.png')
+audio_img = pygame.image.load('Assets/images/audio_img.png')
 audio_img = pygame.transform.scale(audio_img, (120, 120))
-esc_img = pygame.image.load('esc.png')
+esc_img = pygame.image.load('Assets/images/esc.png')
 esc_img = pygame.transform.scale(esc_img, (32, 32))
-retro_img = pygame.image.load('retro_img.png')
+retro_img = pygame.image.load('Assets/images/retro_img.png')
 retro_img = pygame.transform.scale(retro_img, (120, 120))
-star_wars_img = pygame.image.load('star_wars_img.png')
+star_wars_img = pygame.image.load('Assets/images/star_wars_img.png')
 star_wars_img = pygame.transform.scale(star_wars_img, (120, 120))
 
 #default theme
 level_1_alt = ['bg.png', 'block2.png', 'ladder.png']
 
-#level 1    background image            block image             ladder image
-level_1 = ['level 1/ice_bg.png', 'level 1/ice_block.png','level 1/ice_ladder_clear.png']
+#level 1    background image                    block image                     ladder image
+level_1 = ['Assets/level 1/ice_bg.png', 'Assets/level 1/ice_block.png','Assets/level 1/ice_ladder_clear.png']
 
 #level 2    background image            block image             ladder image
-level_2 = ['level 2/hall_bg.png', 'level 2/hall_block.png','level 2/hall_ladder1.png','level 2/hall_ladder2.png', 'level 2/hall_ladder3.png']
+level_2 = ['Assets/level 2/hall_bg.png', 'Assets/level 2/hall_block.png','Assets/level 2/hall_ladder1.png','Assets/level 2/hall_ladder2.png', 'Assets/level 2/hall_ladder3.png']
 
 #level 3    background image            block image             ladder image
-level_3 = ['level 3/desert_bg.png', 'level 3/desert_block.png', 'level 3/desert_ladder.png']
+level_3 = ['Assets/level 3/desert_bg.png', 'Assets/level 3/desert_block.png', 'Assets/level 3/desert_ladder.png']
 
 #level 4    background image            character face             character death face     character idle image
-level_4 = ['level 4/final_bg.png', 'level 4/luke_face.png', 'level 4/luke_death.png', 'level 4/luke_idle.png',
+level_4 = ['Assets/level 4/final_bg.png', 'Assets/level 4/luke_face.png', 'Assets/level 4/luke_death.png', 'Assets/level 4/luke_idle.png',
 #enemy idle     enemy idle animation 2  enemy bullet        enemy death face            enemy face              enemy shoot anim
-'enemy/enemy.png','enemy/enemy2.png', 'enemy/bullet.png','enemy/enemy_death.png', 'enemy/enemy_face.png', 'enemy/enemy_shoot.png']
+'Assets/enemy/enemy.png','Assets/enemy/enemy2.png', 'Assets/enemy/bullet.png','Assets/enemy/enemy_death.png', 'Assets/enemy/enemy_face.png', 'Assets/enemy/enemy_shoot.png']
 
 #automatic images change
 levels = [level_1, level_2, level_3, level_4]
@@ -108,7 +108,7 @@ block_img = pygame.image.load(levels[level-1] [1])
 block_img = pygame.transform.scale(block_img, (tile_size,tile_size))
 ladder_img = pygame.image.load(levels[level-1] [2]) 
 ladder_flip_img = pygame.transform.flip(ladder_img, True, False)
-bg_bottom = pygame.image.load('bg.png')
+bg_bottom = pygame.image.load('Assets/images/bg.png')
 bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 
 
@@ -116,13 +116,13 @@ bg_bottom = pygame.transform.scale(bg_bottom, (screen_w,screen_h))
 chan = pygame.mixer.find_channel()
 music_volume = 0.1
 audio_volume = 1
-bg_fx = pygame.mixer.Sound('Audio/Jumpman_Level_Jazz.wav')
-bg_fx_name = 'Audio/Jumpman_Level_Jazz.wav'
-coin_fx = pygame.mixer.Sound('Audio/Pickup.wav')
-jump_fx = pygame.mixer.Sound('Audio/Player_Jump.wav')
-gameover_fx = pygame.mixer.Sound('Audio/Player_Death_Song.wav')
-spawn_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
-walk_fx = pygame.mixer.Sound('Audio/Player_Spawn.wav')
+bg_fx = pygame.mixer.Sound('Assets/Audio/Jumpman_Level_Jazz.wav')
+bg_fx_name = 'Assets/Audio/Jumpman_Level_Jazz.wav'
+coin_fx = pygame.mixer.Sound('Assets/Audio/Pickup.wav')
+jump_fx = pygame.mixer.Sound('Assets/Audio/Player_Jump.wav')
+gameover_fx = pygame.mixer.Sound('Assets/Audio/Player_Death_Song.wav')
+spawn_fx = pygame.mixer.Sound('Assets/Audio/Player_Spawn.wav')
+walk_fx = pygame.mixer.Sound('Assets/Audio/Player_Spawn.wav')
 #always plays this sound
 pygame.mixer.music.load(bg_fx_name)
 pygame.mixer.music.play(-1, 0.0, 3000)
@@ -153,8 +153,8 @@ def reset_level(level):
     climbable_group.empty()
     walkable_group.empty()
     coin_group.empty()
-    if path.exists(f'level{level}_data'):
-        pickle_in = open(f'level{level}_data', 'rb')
+    if path.exists(f'Assets/levels/level{level}_data'):
+        pickle_in = open(f'Assets/levels/level{level}_data', 'rb')
         world_data = pickle.load(pickle_in)
     world = World(world_data)
     world_loaded = [world]
@@ -422,12 +422,12 @@ class Player():
         self.index = 0
         self.counter = 0
         for num in range(1,3):
-            img_right = pygame.image.load(f'guy{num}.png')
+            img_right = pygame.image.load(f'Assets/images/guy{num}.png')
             img_right = pygame.transform.scale(img_right, (tile_size,tile_size))
             img_left = pygame.transform.flip(img_right, True, False)
             self.images_right.append(img_right)
             self.images_left.append(img_left)
-        self.dead_image = pygame.image.load('idle.png')
+        self.dead_image = pygame.image.load('Assets/images/idle.png')
         self.image = self.images_right[self.index]
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -453,12 +453,12 @@ class Player2():
         self.index = 0
         self.counter = 0
         for num in range(1,3):
-            img_right = pygame.image.load(f'guy{num}.png')
+            img_right = pygame.image.load(f'Assets/images/guy{num}.png')
             img_right = pygame.transform.scale(img_right, (tile_size,tile_size))
             img_left = pygame.transform.flip(img_right, True, False)
             self.images_right.append(img_right)
             self.images_left.append(img_left)
-        self.dead_image = pygame.image.load('idle.png')
+        self.dead_image = pygame.image.load('Assets/images/idle.png')
         self.image = self.images_right[self.index]
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -507,7 +507,7 @@ class World():
 class Enemy1(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('enemy/bullet.png')
+        self.image = pygame.image.load('Assets/enemy/bullet.png')
         self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size//2))
         self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
@@ -664,7 +664,7 @@ class Enemy1(pygame.sprite.Sprite):
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('enemy/enemy_face.png')
+        self.image = pygame.image.load('Assets/enemy/enemy_face.png')
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -760,7 +760,7 @@ class Enemy2(pygame.sprite.Sprite):
 class Enemy3(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('enemy/bomb.png')
+        self.image = pygame.image.load('Assets/enemy/bomb.png')
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.speed = 5 #base speed
@@ -776,11 +776,11 @@ class Enemy3(pygame.sprite.Sprite):
             self.rect.x = randint(40,920)
             self.speed = 5
         if self.rect.y >= 410:
-            self.image = pygame.image.load('enemy/bomb_explosion.png')
+            self.image = pygame.image.load('Assets/enemy/bomb_explosion.png')
             self.image = pygame.transform.scale(self.image, (tile_size*2, tile_size))
             self.speed = 1
         else:   
-            self.image = pygame.image.load('enemy/bomb.png')
+            self.image = pygame.image.load('Assets/enemy/bomb.png')
             self.image = pygame.transform.scale(self.image, (tile_size//2, tile_size))
 
 #ladders and chains - letting the player climb
@@ -810,7 +810,7 @@ class Walkable(pygame.sprite.Sprite):
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        img = pygame.image.load('coin.png')
+        img = pygame.image.load('Assets/images/coin.png')
         self.image = pygame.transform.scale(img, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)
@@ -819,7 +819,7 @@ class Coin(pygame.sprite.Sprite):
 class End(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        img = pygame.image.load('bg.png')
+        img = pygame.image.load('Assets/images/bg.png')
         self.image = pygame.transform.scale(img, (tile_size, tile_size))
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -886,8 +886,8 @@ while run: #while game is running
     world_drawn = 0
 # if world not loaded, get the map based on level nnumber from the file and set the data inside "world" variable and set "loaded" to true
     if not loaded:
-        if path.exists(f'level{level}_data'):
-            pickle_in = open(f'level{level}_data', 'rb')
+        if path.exists(f'Assets/levels/level{level}_data'):
+            pickle_in = open(f'Assets/levels/level{level}_data', 'rb')
             world_data = pickle.load(pickle_in)
         world = World(world_data)
         world_loaded = [world]
@@ -905,10 +905,10 @@ while run: #while game is running
 #if theme is 0 load the default sprites - original theme
     if theme == 0:
         if level <= max_levels:
-            bg_img = pygame.image.load('bg.png')
+            bg_img = pygame.image.load('Assets/images/bg.png')
             bg_img = pygame.transform.scale(bg_img, (screen_w,screen_h))
-            block_img = pygame.image.load('block2.png')
-            ladder_img = pygame.image.load('ladder.png') 
+            block_img = pygame.image.load('Assets/images/block2.png')
+            ladder_img = pygame.image.load('Assets/images/ladder.png') 
             ladder_flip_img = pygame.transform.flip(ladder_img, True, False)
 #(if 4 is pressed set theme to 0, if 5 is pressed set theme to 1) and reload the world.
     if pygame.key.get_pressed()[pygame.K_4]:
