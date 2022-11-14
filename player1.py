@@ -872,9 +872,41 @@ music = True
 audio = False
 button = 0
 
+
 while run: #while game is running
 #    pygame.mixer.music.load(bg_fx_name)
 #    pygame.mixer.music.play(-1) 
+#if ran on the retro pi initailise the buttons
+    osname = 'raspi'
+    key = pygame.key.get_pressed()
+    #if os.uname().nodename == 'raspberrypi':
+    if str(os.name) == osname:
+        from gpiozero import Button
+        #joystick buttons
+        up = Button(4)
+        down = Button(17)
+        left = Button(27)
+        right = Button(22)
+        jump = Button(18)
+        interact = Button(15)
+        button_top_right = Button(14)
+        button_bottom_left = Button(25)
+        button_bottom_middle = Button(24)
+        button_bottom_right = Button(23)
+        button_blue_left = Button(10)
+        button_blue_right = Button(9)
+        esc = button_blue_left
+
+    else:
+        up =  key[pygame.K_UP]
+        down = key[pygame.K_DOWN]
+        left = key[pygame.K_LEFT]
+        right = key[pygame.K_RIGHT]
+        jump = key[pygame.K_SPACE]
+        esc = key[pygame.K_ESCAPE]
+    
+    print(left)
+    
     pygame.mixer.music.set_volume(music_volume)
     coin_fx.set_volume(audio_volume)
     jump_fx.set_volume(audio_volume)
@@ -1003,13 +1035,13 @@ while run: #while game is running
         if button <= -1:
             button = 3
 
-        if pygame.key.get_pressed()[pygame.K_UP]:
+        if up:
             countdown(1)
             button += 1
             audio = True
             music = False
 
-        if pygame.key.get_pressed()[pygame.K_DOWN]:
+        if down:
             countdown(1)
             button -= 1
             music = True
@@ -1062,34 +1094,34 @@ while run: #while game is running
         screen.blit(star_wars_img, (screen_w//1.2,320))
 
 #escape button
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+        if esc:
             options = False
             main = True
         screen.blit(esc_img, (10,10))
 
         if audio:
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
+            if left:
                 if audio_volume >= 0.1:
                     audio_volume -= 0.1
                     countdown(1)
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+            if right:
                 if audio_volume <= 0.9:
                     audio_volume += 0.1
                     countdown(1)
 
         if music:
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
+            if left:
                 if music_volume >= 0.1:
                     music_volume -= 0.1
                     countdown(1)
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+            if right:
                 if music_volume <= 0.9:
                     music_volume += 0.1
                     countdown(1)
 
 #if player is on the gamemode selection screen
     if game:
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+        if esc:
             game = False
             main = True
         screen.blit(esc_img, (10,10))
@@ -1136,7 +1168,7 @@ while run: #while game is running
             run_game = True
     
     if run_game and loaded:
-        if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+        if esc:
             run_game = False
             main = True
         screen.blit(esc_img, (10,10))
@@ -1232,11 +1264,10 @@ while run: #while game is running
             run = False
         #if game is not being played, allow user to select buttons
         if gameover != 0:
-            if event.type == pygame.KEYDOWN:
-                if pygame.key.get_pressed()[pygame.K_LEFT]:
-                    current_selection -=1
-                if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                    current_selection +=1
+            if left:
+                current_selection -=1
+            if right:
+                current_selection +=1
     if str(os.name) == osname:
         from gpiozero import Button
         if Button(27).is_pressed:
